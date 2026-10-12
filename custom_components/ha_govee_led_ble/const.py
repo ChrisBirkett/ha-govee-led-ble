@@ -419,22 +419,15 @@ MODEL_PROFILES: dict[str, ModelProfile] = {
         # 1/2+ has thirteen. 1/3 adds masked Kelvin, still unqualified here.
     ),
     "H601C": ModelProfile(
-        "H601C Ceiling Light",
+        "H601C Recessed Downlight",
         command_grammar="H601C",
-        status_grammar="H601C",
         command_operations=frozenset({"power", "brightness", "static"}),
-        read_domains=frozenset(
-            {ReadDomain.POWER, ReadDomain.BRIGHTNESS, ReadDomain.COLOUR_MODE, ReadDomain.FIRMWARE, ReadDomain.HARDWARE}
-        ),
-        setup_required_read_domains=frozenset({ReadDomain.POWER, ReadDomain.BRIGHTNESS, ReadDomain.COLOUR_MODE}),
         supports_rgb=True,
         supports_color_temperature=True,
         min_color_temp_kelvin=2700,
         max_color_temp_kelvin=6500,
         whole_device_mask=1,
-        static_readback_echoes_color=True,
-        static_readback_kelvin=True,
-        static_readback_zero_kelvin_is_rgb=True,
+        connection_idle_timeout=1.5,
     ),
     "H6099": ModelProfile(
         "H6099 TV Backlight 3 Lite",

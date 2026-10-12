@@ -25,14 +25,20 @@ independently attributable raw capture artifact. Fixture attribution remains par
 | H601C identity | `com/govee/bulblightv3/pact/Support.java`: H601C goods 111; `com/govee/pact_h60a0/pact/Support.java`: H60C1 goods 324 | Exact H601C profile; no H60C1 alias |
 | H601C RGB/Kelvin | `com/govee/bulblightv3/ble/SubModeColor.java:36–44,71–82,96–110` | `33 05 0d`, direct RGB, BE Kelvin, companion RGB; whole device only |
 | H601C companion table | `com/govee/base2home/Constant.java:469–546,1061–1074` | All 39 first ordered entries, 2700–6500 in 100 K steps; off-table requests rejected before writes, no interpolation |
-| H601C mode query | `com/govee/base2light/ble/controller/AbsModeController.java`, `p()`; `bulblightv3/ble/Mode.java` | `aa 05 01`; static `0d` only interpreted, other modes remain opaque |
-| Basic power/brightness/identity | `com/govee/base2light/ble/controller/{SwitchController,BrightnessController,SoftVersionController,HardVersionController,AbsSingleController}.java` | Shared generated query envelope; exact H601C command/status roots; identity response presence remains candidate |
+| H601C mode query | `com/govee/base2light/ble/controller/AbsModeController.java`, `p()`; `bulblightv3/ble/Mode.java` | Query layout remains decode-only; H601C runtime makes no status-readback claim |
+| Basic power/brightness/identity | `com/govee/base2light/ble/controller/{SwitchController,BrightnessController,SoftVersionController,HardVersionController,AbsSingleController}.java` | H601C command grammar remains enabled for writes; status roots remain speculative and are not selected at runtime |
 | H601C reported hardware check | Contributor report in [PR #330](https://github.com/teh-hippo/ha-govee-led-ble/pull/330): HW 1.00.01 / FW 1.00.07 | Reports live `33 05 00` ACK and `aa 05 0d` register confirmation; no attributable raw capture or independently verified visible-output result, so this does not qualify the model |
+| H601C multi-fixture report | [PR #330](https://github.com/teh-hippo/ha-govee-led-ble/pull/330#issuecomment-6117577561): eight 6-inch downlights, HW 1.02.00 / FW 1.00.11, ESP32 proxies | Owner reports missing status replies, group-control stalls, dropped commands and proxy-slot pressure; keep controls optimistic and serialize light updates pending exact-candidate retest |
 | H60A geometry | `com/govee/pact_h60a0/pact/Support.java:185–214,238–240,345–346,489–498` | Four records/page; H60A1 14, qualified H60A6 13; geometry authorization separate from schema presence |
 | Meaningful page records | `com/govee/base2light/kt/general_controller/Controller4ColorInfoByGroup.java:173–187` and reporter literals | Complete four-page collection required; zero-valued records count, unused slots opaque |
 | H60A brightness | Reporter front-panel-only `33 04 PP`; H60A6 `aa04` always 01; masked brightness ACK/readback without rendering | One panel write; no brightness queries/retry verification; stored level retained locally, never BLE observation |
 | H60A Kelvin | `pact_h60a0/ble/v1/SubModeColorV1.java`; `base2light/pact/newdetail/config/fuc/KelvinConfig.java`, `S2`; reporter sibling-zone failure | Disabled independently of RGB geometry; app table/sentinel differs from generic RGB writer |
 | Encryption | Reporter advert flag 0x40, v1 handshake; existing repository transport | Existing advertisement/GATT-selected encryption; no SKU-selected plaintext fallback |
+
+The owner later corrected the earlier `7.8.1-rc.2.lights` test as incomplete and
+misattributed. Comparing that tag with `v7.9.0` shows only the manifest version
+changed, so the later failures expose untested group-load behaviour rather than a
+source-code regression between those builds.
 
 ### Identifiable variants and authorization
 
@@ -60,11 +66,12 @@ only with the above qualification. Front panel is segment 14/13; the preceding 1
 segments are the ring. Master brightness does not dim the ring. Segment register
 brightness is decoded but never offered as a rendered brightness control.
 
-H601C exposes whole-device RGB, 100 K-step Kelvin, brightness and power, with basic
-fresh-readback verification. A successful write or optimistic state is not proof of
-rendered output. Unknown mode/tail bytes and companion RGB are retained by generated
-parsers for inspection. Companion RGB is decode-only; arbitrary app-authored companion
-state cannot be losslessly replayed through the basic HA controls.
+H601C exposes whole-device RGB, 100 K-step Kelvin, brightness and power using
+optimistic state only. Status queries are not enabled because the owner reports no
+replies on the tested downlights; a successful write or optimistic state is not proof
+of rendered output. Unknown mode/tail bytes and companion RGB remain decode-only.
+Arbitrary app-authored companion state cannot be losslessly replayed through the basic
+HA controls.
 Authored raw H601C writes must use the canonical table companion; incoming companions
 remain opaque to control recovery. An unsolicited Kelvin reply demotes old direct RGB
 to retained knowledge. Power wire values remain unsigned (nonzero is on); out-of-range
@@ -88,7 +95,7 @@ timers and firmware updates are outside this candidate; repository non-goals sti
 | Obligation / semantic flow | Implementation owner | Runnable software evidence | Remaining authority |
 | --- | --- | --- | --- |
 | Exact profiles / revocation | `const.py`, `coordinator.py` | `tests/test_ceiling_profiles.py` | Fresh reported Pact/HW/FW plus physical controls |
-| H601C producer → parser → expectation → HA → fresh reply | speculative `h601c_{command_write,status_reply}.ksy`, adapter, light commands/status | `tests/test_h601c_protocol.py` (static-derived vectors, not captures) | Owner RGB/Kelvin transitions, complete replies, restoration |
+| H601C write → optimistic HA state | speculative `h601c_command_write.ksy`, adapter and light commands; status root not selected at runtime | `tests/test_h601c_protocol.py` (static-derived vectors, not captures); profile tests enforce no query/readback claims | Owner RGB/Kelvin output and restoration; grouped writes across more than three proxy-routed lights |
 | H60A pages → complete state → masked writes | speculative `h60a{1,6}_status_reply.ksy`, shared command root, coordinator | `tests/test_h60a_protocol.py` (reporter literals plus explicitly synthetic pages) | Attributable full page sequences and visible ring/panel behavior |
 | Write-only brightness / invalid preflight / rollback | `light.py`, shared physical writer | Ceiling entity tests; existing `tests/test_light.py` and coordinator tests | Owner panel dimming, restart-retained value, no ring dimming claim |
 | Reconnect / stale profile | Authorization identity invalidation and per-attempt guards | Reconnect revocation regression and late identity tests | Real reconnect with missing/changed identity |
@@ -118,7 +125,9 @@ Reproduce with `make check` and `make package`; focused replay:
 Owner validation: install the exact prerelease through HACS beta versions, restart, add or
 reconfigure the exact SKU, then try power, brightness, RGB and the enabled segment/Kelvin
 controls. Test ring and panel independently on H60A, H601C RGB ↔ Kelvin at 2700/4000/6500,
-off/on, reconnect and restart. Confirm physical output as well as HA state and restore the
-starting state. After a failure export redacted diagnostics immediately, including exact
-release, Pact/hardware/firmware and expected/observed behavior. Do not share unique device
-identifiers. No stable merge or support-status promotion before owner results.
+off/on, reconnect and restart. For H601C, also exercise grouped actions across the
+proxy-routed fixtures and report latency, dropped commands and restoration. Confirm physical
+output as well as HA state and restore the starting state. After a failure export redacted
+diagnostics immediately, including exact release, Pact/hardware/firmware and expected/observed
+behavior. Do not share unique device identifiers. No stable merge or support-status promotion
+before owner results.
