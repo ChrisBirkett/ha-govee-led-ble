@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import voluptuous as vol
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, SupportsResponse
 from homeassistant.helpers import config_validation as cv
@@ -10,6 +9,7 @@ from homeassistant.helpers import service
 from homeassistant.helpers.typing import VolDictType
 
 from .const import DOMAIN
+from .schema_compat import vol
 
 SERVICE_APPLY_CUSTOM_EFFECT = "apply_custom_effect"
 ATTR_EFFECT = "effect"

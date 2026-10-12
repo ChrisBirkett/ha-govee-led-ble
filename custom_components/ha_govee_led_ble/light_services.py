@@ -4,7 +4,6 @@ from collections.abc import Awaitable, Callable, Mapping
 from contextlib import AbstractContextManager
 from typing import TYPE_CHECKING, Any
 
-import voluptuous as vol
 from homeassistant.components.light import ColorMode  # type: ignore[attr-defined]
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, SupportsResponse
@@ -31,6 +30,7 @@ from .light_commands import (
     segments_to_mask,
 )
 from .native_profile_controls import apply_active_video_mode
+from .schema_compat import vol
 
 __all__ = ("apply_active_video_mode", "async_register_light_services")
 

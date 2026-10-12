@@ -7,7 +7,6 @@ from functools import partial
 from typing import Any, cast
 from uuid import UUID
 
-import voluptuous as vol
 from bleak.exc import BleakError
 from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api.connection import ActiveConnection
@@ -136,6 +135,7 @@ from .effect_websocket_schema import (
 from .music_commands import music_body_style
 from .music_protocol import music_code_for
 from .native_profile_controls import async_require_video_controls
+from .schema_compat import vol
 from .video_applicability import requested_video_controls, video_control_states
 
 BACKEND_DATA_KEY = "effect_backend"

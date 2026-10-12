@@ -2,8 +2,6 @@
 
 from typing import Any
 
-import voluptuous as vol
-
 from .const import DOMAIN
 from .effect_limits import (
     MAX_EFFECT_DOCUMENT_BYTES,
@@ -16,6 +14,7 @@ from .effect_limits import (
     validate_json_document,
     validate_timestamp,
 )
+from .schema_compat import vol
 
 WS_INFO = f"{DOMAIN}/editor/info"
 WS_DEVICES = f"{DOMAIN}/editor/devices"

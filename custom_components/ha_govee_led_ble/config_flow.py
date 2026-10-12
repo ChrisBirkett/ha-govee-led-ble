@@ -6,7 +6,6 @@ import logging
 import re
 from typing import Any
 
-import voluptuous as vol
 from bleak import BleakError  # type: ignore[attr-defined]
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import BluetoothServiceInfo
@@ -38,6 +37,7 @@ from .const import (
 )
 from .firmware_version import FirmwareVersion
 from .h6102_protocol import H6102_PACTS
+from .schema_compat import vol
 
 _LOGGER = logging.getLogger(__name__)
 
