@@ -81,6 +81,14 @@ def test_h617a_and_h617e_share_wire_behaviour_but_keep_exact_product_profiles():
     assert h617e.effect_grammar == h617a.effect_grammar == "H617A"
 
 
+@pytest.mark.parametrize("model", ["H617C", "H617F"])
+def test_h617c_and_h617f_use_exact_scene_catalogues_with_h617a_wire_grammars(model):
+    profile = MODEL_PROFILES[model]
+
+    assert profile.scene_catalogue_sku == model
+    assert profile.command_grammar == profile.status_grammar == profile.effect_grammar == "H617A"
+
+
 def test_h6076_profile_is_basic_and_fail_closed():
     profile = MODEL_PROFILES["H6076"]
     assert profile.support_quality is SupportQuality.PARTIAL

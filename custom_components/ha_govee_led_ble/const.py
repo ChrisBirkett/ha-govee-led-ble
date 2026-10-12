@@ -566,7 +566,7 @@ MODEL_PROFILES: dict[str, ModelProfile] = {
         command_grammar="H617A",
         status_grammar="H617A",
         effect_grammar="H617A",
-        scene_catalogue_sku="H617A",
+        scene_catalogue_sku="H617C",
     ),
     "H617F": replace(
         _H617A_PROFILE,
@@ -575,7 +575,7 @@ MODEL_PROFILES: dict[str, ModelProfile] = {
         command_grammar="H617A",
         status_grammar="H617A",
         effect_grammar="H617A",
-        scene_catalogue_sku="H617A",
+        scene_catalogue_sku="H617F",
     ),
     "H6076": ModelProfile(
         "H6076 Lyra Floor Lamp",

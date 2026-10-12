@@ -1,3 +1,4 @@
+import json
 import logging
 from pathlib import Path
 from unittest.mock import AsyncMock, patch
@@ -13,6 +14,7 @@ from homeassistant.helpers import entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.ha_govee_led_ble.const import (
+    BLE_DISCOVERABLE_MODELS,
     CONF_ALWAYS_INCLUDE_CUSTOM_EFFECTS,
     CONF_EFFECT_CATEGORIES,
     CONF_H6102_APP_FIRMWARE,
@@ -89,6 +91,15 @@ def test_h6102_is_absent_from_bluetooth_manifest() -> None:
     manifest = (Path(__file__).parents[1] / "custom_components/ha_govee_led_ble/manifest.json").read_text()
 
     assert "H6102" not in manifest
+
+
+def test_bluetooth_manifest_covers_discoverable_models() -> None:
+    manifest_path = Path(__file__).parents[1] / "custom_components/ha_govee_led_ble/manifest.json"
+    patterns = {entry["local_name"] for entry in json.loads(manifest_path.read_text())["bluetooth"]}
+
+    assert {
+        f"{prefix}_{model}*" for prefix in ("ihoment", "Govee", "GBK", "GVH") for model in BLE_DISCOVERABLE_MODELS
+    } <= patterns
 
 
 async def test_bluetooth_discovery_normalizes_unique_id(hass: HomeAssistant):
@@ -339,10 +350,18 @@ async def test_user_step_requires_explicit_model(hass: HomeAssistant):
 _EM = [("SomeOtherDevice", None), ("Govee_H9999_ABCD", None), ("", None), ("ihoment_H617A_ABCD", "H617A")]
 _EM += [("Govee_H617A_ABCD", "H617A"), ("GBK_H617A_ABCD", "H617A"), ("GVH_H617A_ABCD", "H617A")]
 _EM += [
+    ("ihoment_H617C_ABCD", "H617C"),
+    ("Govee_H617C_ABCD", "H617C"),
+    ("GBK_H617C_ABCD", "H617C"),
+    ("GVH_H617C_ABCD", "H617C"),
     ("ihoment_H617E_ABCD", "H617E"),
     ("Govee_H617E_ABCD", "H617E"),
     ("GBK_H617E_ABCD", "H617E"),
     ("GVH_H617E_ABCD", "H617E"),
+    ("ihoment_H617F_ABCD", "H617F"),
+    ("Govee_H617F_ABCD", "H617F"),
+    ("GBK_H617F_ABCD", "H617F"),
+    ("GVH_H617F_ABCD", "H617F"),
     ("Govee_H617A0_ABCD", None),
     ("Govee_H617AX_ABCD", None),
     ("ihoment_H6076_ABCD", "H6076"),
