@@ -131,5 +131,5 @@
     "requirements": [
         "kaitaistruct==0.11"
     ],
-    "version": "7.13.1"
+    "version": "7.13.2"
 }
