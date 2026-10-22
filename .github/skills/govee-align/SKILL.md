@@ -14,19 +14,25 @@ Take `<MODEL>` (an exact SKU such as `H6076`, `H6125`, `H7020`, `H7025`, `H60A1`
 
 ## Boundaries and reference material
 
+- **Full support across revisions by default:** Always audit and plan for complete in-scope support across all hardware and firmware revisions, while preserving confirmed working behaviour.  Never call `ask_user` to ask whether to narrow an investigation or plan to a single reported bug.
 - **Select mode up front:** **Read-only mode** (investigations, issue diagnosis, PR reviews) never modifies tracked files or runs mutating tracked-file generators (`make build`, `make check`, `refresh_scene_catalogues.py`).  **Implementation mode** uses a dedicated git worktree and absolute paths when other work is active.
 - **Reference material (worktree-safe):** Resolve the parent directory of the main repository clone via Git and read the reference material instructions before inspecting protocol files:
   ```sh
   common_git_dir="$(git rev-parse --git-common-dir)"
   ref_dir="$(cd "$common_git_dir/../.." && pwd)/.reference-material"
   ```
-  Read `$ref_dir/README.md` first and follow its confidentiality rules, lookups, entry points, and **LSP activation** workflow (`lsp` `documentSymbol` on target reference source files first to link them into the language server before `goToDefinition`, `findReferences`, `hover`, and `workspaceSymbol`).
+  Read `$ref_dir/README.md` first and follow its confidentiality rules, lookups, entry points, and **LSP activation** workflow.
+- **Efficiency rules:**
+  - **Local first:** Exhaust `$ref_dir`, repository `.ksy`/`const.py`/`scene_catalogues/<MODEL>.json`, and GitHub issue/PR history before any `web_search` or `web_fetch`.  Call `web_search` at most once and only when a physical specification remains unresolved locally.
+  - **No duplicate reads:** Do not call `lsp` `documentSymbol` and full-file `view` on the same small file in one turn; use `documentSymbol` on large files to locate `view_range` targets or to link files before `goToDefinition`/`findReferences`.
+  - **Fast JSON/ZIP reads:** Use `python3 -c` (not `uv run python -c`) for stdlib JSON/ZIP inspection so fresh worktrees do not trigger a full `.venv` sync.
+  - **No guessed `docs/` paths:** Per-model `docs/*-support.md` files do not exist; rely on `grep`/`glob`, `.ksy` `doc` headers, and `const.py`.
 - **Global non-goals (`CONTRIBUTING.md`):** Never expose runtime controls, queries, or active runtime roots for AI filters, Wi-Fi provisioning/cloud control, onboard timers/schedules, phone/host microphone streaming, continuous host-driven BLE streaming, OTA updates, animated previews, or cloud camera calibration.
 
 ## 1. Research hardware reality and lookup `<MODEL>`
 
-1. **Physical device and public evidence:** Check manufacturer manuals (segment/bulb/string geometry, dedicated white emitters, power limits), GitHub issue diagnostics, and independent third-party BLE captures or integrations (excluding self-referential repository hits).
-2. **Reference material lookup:** Follow `$ref_dir/README.md` (activating the LSP on target reference files) to inspect metadata tables, dynamic type-ID remapping, hardware-version family parsers, BLE local-name prefixes, and encryption eligibility against `BLE_DISCOVERABLE_MODELS` and `manifest.json`.
+1. **Reference and repository lookup:** Follow `$ref_dir/README.md` and inspect existing `.ksy`, `const.py`, `scene_catalogues/<MODEL>.json`, and GitHub issue/PR context for `<MODEL>`'s product/type ID, IC/segment geometry, dynamic type-ID remapping, hardware-version family parsers, BLE local-name prefixes, and encryption eligibility.
+2. **Physical device and public evidence:** Cross-check hardware geometry, dedicated white emitters, power limits, owner diagnostics, and independent third-party captures (excluding self-referential repository hits).
 3. **Hardware/revision matrix:** Map `(pact_type, pact_code, hardware, firmware, subordinate_20/21)` to each capability independently.  Separate baseline capabilities safe from Pact alone (so setup and writes work if version queries time out) from capabilities requiring confirmed HW/FW versions.  Treat reference code as candidate routing, not hardware proof; flag where physical firmware diverges (unanswered queries, masked-write side effects, out-of-range stored registers).
 
 ## 2. Trace feature surfaces end to end
@@ -52,8 +58,8 @@ Kaitai Struct (`.ksy`) is the single source of wire truth.  Audit `<MODEL>` and 
 ## 4. Check, review with a second agent, and report
 
 1. **Run verification checks:**
-   - Read-only: `make protocol verify-protocol` (writes gitignored `generated_protocol/` only), `uv run pytest tests/test_profile_wire_invariants.py tests/test_kaitai_protocol.py tests/test_const.py -q`, and `uv run python -m tools.generate_frontend_contract_fixtures --check`.
-   - Implementation: add every distinct `device_profile()` outcome to `_QUALIFIED_CONTEXTS` in `tests/test_profile_wire_invariants.py`, add direct-byte frames to `tests/test_kaitai_protocol.py`, regenerate fixtures if needed, and pass `make check`.
+   - Read-only: do not run `make protocol verify-protocol`, `test_profile_wire_invariants.py`, or `generate_frontend_contract_fixtures --check` on an unmodified checkout; run targeted `pytest` only when testing a specific frame/decode hypothesis.
+   - Implementation: run `make protocol verify-protocol`, add every distinct `device_profile()` outcome to `_QUALIFIED_CONTEXTS` in `tests/test_profile_wire_invariants.py`, add direct-byte frames to `tests/test_kaitai_protocol.py`, regenerate fixtures if needed, and pass `make check`.
 2. **Review with another agent:** Run a `code-review` or `rubber-duck` subagent (`gpt-6-astra`) to challenge the hardware/revision findings, Kaitai boundaries, and neighbouring refactoring opportunities.
 3. **Respond clearly:**
    - **If aligned:** Return a short confirmation only (checked surfaces and passing checks).
