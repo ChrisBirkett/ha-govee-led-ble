@@ -50,7 +50,7 @@ Use the same short structure for human and agent plans:
 3. **Candidate support scope**
 4. **Model-specific changes and owner checks**
 
-Research the exact device through available app behaviour, public sources, related projects, and supplied material.  Review contributed protocol files rather than accepting them as authoritative.  Aim for broad in-scope support, include defensible hypotheses as clearly speculative Kaitai, and preserve unknowns instead of inventing facts.
+Research the exact device through available app behaviour, public sources, related projects, and supplied material.  Review contributed protocol files rather than accepting them as authoritative.  Always target full in-scope support across all hardware and firmware revisions, enabling every defensible capability backed by exact-model protocol evidence or speculative Kaitai on both `Experimental` and `Supported` models while keeping only disproven or unsafe operations disabled.  Preserve unknowns instead of inventing facts.
 
 The plan should describe only model-specific findings and work.  Keep the plan in the issue or pull request discussion rather than committing per-model files under docs/.  Link to this document instead of repeating repository architecture, protocol, support, release, or validation rules.
 
@@ -102,9 +102,11 @@ unresolved assumptions.  Preserve uncertain bytes as opaque or unknown data.
 Do not invent enum members, semantic names, `reserved` fields, or `valid`
 constraints.
 
-Speculative roots may be generated into the runtime package, but
-only explicitly selected roots belong in the runtime root list.  Their presence
-is not protocol proof and does not justify enabling untested capabilities.
+Speculative roots may be generated into the runtime package, and only roots
+used by an enabled profile path belong in the runtime root list.  Enable all
+defensible in-scope capabilities backed by exact-model speculative schemas or
+compatible evidence-backed roots, keeping only disproven or unsafe paths
+disabled.
 
 Promoting a schema to the evidence-backed parent directory requires attributable
 official-app captures, representative direct-byte parser tests, successful
@@ -142,11 +144,10 @@ hand-select a subset.  Catalogue availability proves scene identity and vendor
 payload data only; it does not prove transport, activation, upload, or readback
 compatibility.
 
-A committed snapshot may remain available as inert metadata while the model
-profile keeps scene controls disabled.  An Experimental candidate may expose
-scene activation when an exact-model transport hypothesis is represented in
-Kaitai.  Owner-confirmed visible behaviour and restoration are required before
-promotion.
+Enable scene activation and upload whenever an exact-model transport hypothesis
+or verified grammar is represented in Kaitai, while keeping disproven or unsafe
+paths disabled.  Owner-confirmed visible behaviour and restoration are required
+before promoting an Experimental model to Supported.
 
 Use `scene_codes` for revision-specific selector eligibility and project selector-only behaviour through the effective profile.
 Keep vendor snapshots unchanged when a documented legacy selector is absent.

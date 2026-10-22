@@ -24,6 +24,7 @@ Take `<MODEL>` (an exact SKU such as `H6076`, `H6125`, `H7020`, `H7025`, `H60A1`
   Read `$ref_dir/README.md` first and follow its confidentiality rules, lookups, entry points, and **LSP activation** workflow.
 - **Efficiency rules:**
   - **Local first:** Exhaust `$ref_dir`, repository `.ksy`/`const.py`/`scene_catalogues/<MODEL>.json`, and GitHub issue/PR history before any `web_search` or `web_fetch`.  Call `web_search` at most once and only when a physical specification remains unresolved locally.
+  - **Batch searches and file slices:** `grep` for target functions/constants first, then read all needed `view_range` slices across files in one parallel turn rather than paging one slice per turn.
   - **No duplicate reads:** Do not call `lsp` `documentSymbol` and full-file `view` on the same small file in one turn; use `documentSymbol` on large files to locate `view_range` targets or to link files before `goToDefinition`/`findReferences`.
   - **Fast JSON/ZIP reads:** Use `python3 -c` (not `uv run python -c`) for stdlib JSON/ZIP inspection so fresh worktrees do not trigger a full `.venv` sync.
   - **No guessed `docs/` paths:** Per-model `docs/*-support.md` files do not exist; rely on `grep`/`glob`, `.ksy` `doc` headers, and `const.py`.
@@ -60,8 +61,9 @@ Kaitai Struct (`.ksy`) is the single source of wire truth.  Audit `<MODEL>` and 
 1. **Run verification checks:**
    - Read-only: do not run `make protocol verify-protocol`, `test_profile_wire_invariants.py`, or `generate_frontend_contract_fixtures --check` on an unmodified checkout; run targeted `pytest` only when testing a specific frame/decode hypothesis.
    - Implementation: run `make protocol verify-protocol`, add every distinct `device_profile()` outcome to `_QUALIFIED_CONTEXTS` in `tests/test_profile_wire_invariants.py`, add direct-byte frames to `tests/test_kaitai_protocol.py`, regenerate fixtures if needed, and pass `make check`.
-2. **Review with another agent:** Run a `code-review` or `rubber-duck` subagent (`gpt-6-astra`) to challenge the hardware/revision findings, Kaitai boundaries, and neighbouring refactoring opportunities.
-3. **Respond clearly:**
+2. **Review with another agent:** Run a `code-review` or `rubber-duck` subagent (`gpt-6-astra`) to challenge the hardware/revision findings, Kaitai boundaries, and neighbouring refactoring opportunities.  Pass exact file/line citations and instruct the reviewer not to re-invoke `govee-align` or repeat full reference discovery.
+3. **Respond and plan clearly:**
    - **If aligned:** Return a short confirmation only (checked surfaces and passing checks).
    - **If misaligned or incomplete:** Return a concise numbered list of gaps in chat, and write the full AI-actionable specification (evidence ledger, exact wire frames, `.ksy` schema changes, `ModelProfile`/`device_profile()` updates, and neighbouring code improvements) to `<session_folder>/files/align-<model>.md`.
+   - **When planning an implementation:** Include the four-section `CONTRIBUTING.md` plan and the complete delivery handoff: independent code review, `make check`, draft PR/comment approval, opening a PR linked to the issue (`Fixes #<issue>`, exact SKU label), passing CI, and rebase-merging to `master`.
 
