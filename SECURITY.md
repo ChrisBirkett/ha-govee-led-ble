@@ -1,5 +1,7 @@
 # Security policy
 
+Security issues & concerns are addressed by the product maintainer, [@teh-hippo](https://github.com/teh-hippo).
+
 ## Reporting a vulnerability
 
 Report suspected vulnerabilities through [GitHub private vulnerability reporting](https://github.com/teh-hippo/ha-govee-led-ble/security/advisories/new).  Do not
