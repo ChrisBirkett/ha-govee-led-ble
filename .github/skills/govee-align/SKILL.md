@@ -14,7 +14,7 @@ Take `<MODEL>` (an exact SKU such as `H6076`, `H6125`, `H7020`, `H7025`, `H60A1`
 
 ## Boundaries and reference material
 
-- **Full support across revisions by default:** Always audit and plan for complete in-scope support across all hardware and firmware revisions, while preserving confirmed working behaviour.  Never call `ask_user` to ask whether to narrow an investigation or plan to a single reported bug.
+- **Full support across revisions by default:** Always audit, plan, and enable all defensible in-scope features across all hardware and firmware revisions, while preserving confirmed working behaviour and safety guards.  Never call `ask_user` to ask whether to narrow scope to a single reported bug or whether to keep structurally evidenced capabilities disabled until hardware qualification.
 - **Select mode up front:** **Read-only mode** (investigations, issue diagnosis, PR reviews) never modifies tracked files or runs mutating tracked-file generators (`make build`, `make check`, `refresh_scene_catalogues.py`).  **Implementation mode** uses a dedicated git worktree and absolute paths when other work is active.
 - **Reference material (worktree-safe):** Resolve the parent directory of the main repository clone via Git and read the reference material instructions before inspecting protocol files:
   ```sh
