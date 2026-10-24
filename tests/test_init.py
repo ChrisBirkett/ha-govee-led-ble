@@ -571,11 +571,17 @@ async def test_async_setup_skips_effect_studio_without_capable_device():
             "custom_components.ha_govee_led_ble.async_setup_effects",
             new_callable=AsyncMock,
         ) as setup_effects,
+        patch(
+            "custom_components.ha_govee_led_ble.async_recover_dreamview_claims",
+            new_callable=AsyncMock,
+        ) as recover_claims,
     ):
         assert await async_setup(hass, {}) is True
+        await hass.async_create_task.call_args.args[0]
 
     register_services.assert_called_once_with(hass)
     setup_effects.assert_awaited_once_with(hass)
+    recover_claims.assert_awaited_once_with(hass)
     hass.http.async_register_static_paths.assert_not_awaited()
     register.assert_not_called()
 
