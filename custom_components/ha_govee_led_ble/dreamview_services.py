@@ -6,13 +6,13 @@ from collections.abc import Callable
 from functools import partial
 from typing import Any
 
-import voluptuous as vol
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import service
 
 from .const import DOMAIN
 from .dreamview import DreamviewMember, build_dreamview_command, build_dreamview_group, integer
+from .schema_compat import vol
 
 
 def _integer(maximum: int) -> Callable[[Any], int]:
@@ -92,6 +92,7 @@ async def _async_dreamview_service(entity: Any, call: ServiceCall, *, name: str)
         if setting == "replace":
             members = tuple(DreamviewMember(**{**item, "zones": tuple(item["zones"])}) for item in values["members"])
             build_dreamview_group(members, c.profile)
+            await c.async_validate_dreamview_members(members)
         elif setting != "read":
             build_dreamview_command("delete_group" if setting == "delete" else setting, values, c.profile)
         if setting == "read":
@@ -103,6 +104,8 @@ async def _async_dreamview_service(entity: Any, call: ServiceCall, *, name: str)
             await c.async_delete_dreamview_group()
         else:
             await c.async_set_dreamview(setting, values)
+    except ServiceValidationError:
+        raise
     except TypeError, ValueError, vol.Invalid:
         raise ServiceValidationError(translation_domain=DOMAIN, translation_key="invalid_control_request") from None
     except Exception:

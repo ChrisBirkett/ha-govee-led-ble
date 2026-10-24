@@ -45,7 +45,7 @@ from .const import (
     supported_effect_categories,
 )
 from .control_arbiter import BLEControlArbiter, ControlIntent, PreviewAdmission, async_control_intent
-from .coordinator_dreamview import _DreamviewMixin
+from .coordinator_dreamview import DreamviewClaimedError, _DreamviewMixin, is_dreamview_claimed
 from .coordinator_expectations import expectations_from_packet
 from .coordinator_modes import PreModeSnapshot, _ActiveModeMixin
 from .coordinator_status import (
@@ -1281,9 +1281,13 @@ class GoveeBLECoordinator(_DreamviewMixin, _ActiveModeMixin):
                 and not self._receive_is_stale()
                 and not self._segment_query_incomplete
                 and not self._bulk_query_incomplete
+                and not is_dreamview_claimed(
+                    self.hass, self.config_entry.entry_id if self.config_entry is not None else None, self
+                )
             ):
                 return self._state_snapshot()
             try:
+                self._require_not_dreamview_claimed()
                 async with async_control_intent(self, ControlIntent.BACKGROUND, wait=False) as acquired:
                     if not acquired:
                         return self._state_snapshot()
@@ -1330,6 +1334,12 @@ class GoveeBLECoordinator(_DreamviewMixin, _ActiveModeMixin):
         return {field: getattr(self, field) for field in _CORE_STATE_FIELDS}
 
     async def _ensure_connected(self) -> BleakClient:
+        try:
+            self._require_not_dreamview_claimed()
+        except BleakError:
+            if self._client and self._client.is_connected:
+                await self._disconnect_locked()
+            raise
         if self._connection_initializing:
             raise GoveeCryptoError("connection_setup_in_progress")
         if self._client and self._client.is_connected:
@@ -1356,6 +1366,7 @@ class GoveeBLECoordinator(_DreamviewMixin, _ActiveModeMixin):
             await self._disconnect_locked()
         elif self._client is not None:
             self._clear_client_state(self._client)
+        self._require_not_dreamview_claimed()
         force_fresh_services = self.fresh_services_required
         self._connection_initializing = True
         if self._encryption is None:
@@ -1371,17 +1382,21 @@ class GoveeBLECoordinator(_DreamviewMixin, _ActiveModeMixin):
                 disconnected_callback=self._disconnected_callback,
                 use_services_cache=not force_fresh_services,
             )
+            self._require_not_dreamview_claimed()
             self._reset_disconnect_timer()
             await self._encryption.async_select(
                 client,
                 advertised=self._advertised_encryption,
                 plaintext_evidence=self._advertised_plaintext and not self._advertised_encryption,
             )
+            self._require_not_dreamview_claimed()
             if self._client is not client or not client.is_connected:
                 raise GoveeCryptoError("disconnected_during_selection")
             if self.profile.requires_notifications or self._encryption.version:
                 await self._start_notify()
+                self._require_not_dreamview_claimed()
             await self._encryption.async_negotiate(client)
+            self._require_not_dreamview_claimed()
             if self._client is not client or not client.is_connected:
                 raise GoveeCryptoError("disconnected_during_setup")
             if self.profile.requires_notifications:
@@ -1396,19 +1411,26 @@ class GoveeBLECoordinator(_DreamviewMixin, _ActiveModeMixin):
                     if field in self._authorization_identity_fields() and self.profile.can_read(domain)
                 }
                 await self._send_identity_queries()
+                self._require_not_dreamview_claimed()
                 # Reconnect invalidates authorization. Let real notifications requalify
                 # guards before returning, but missing identity must not fail basic setup.
                 await self._wait_for_revisions({}, identity_baselines, time.monotonic() + IDENTITY_QUERY_TIMEOUT)
+                self._require_not_dreamview_claimed()
                 if self.profile.configured_string_counts:
                     await self._read_configured_strings(client, deadline=time.monotonic() + IDENTITY_QUERY_TIMEOUT)
+                    self._require_not_dreamview_claimed()
             if self._client is not client or not client.is_connected or not self._encryption.ready:
                 raise GoveeCryptoError("disconnected_during_setup")
             if self.profile.state_readable and self._notify_started_monotonic is not None:
                 self._start_keep_alive()
         except BaseException as err:
-            stale_gatt = self._record_ble_failure(err)
+            stale_gatt = False if isinstance(err, DreamviewClaimedError) else self._record_ble_failure(err)
             await self._disconnect_locked(clear_cache=stale_gatt)
-            if isinstance(err, Exception) and self._encryption.version and not isinstance(err, GoveeCryptoError):
+            if (
+                isinstance(err, Exception)
+                and self._encryption.version
+                and not isinstance(err, (GoveeCryptoError, DreamviewClaimedError))
+            ):
                 raise GoveeCryptoError("encrypted_setup_failed") from None
             raise
         finally:
@@ -2345,6 +2367,11 @@ class GoveeBLECoordinator(_DreamviewMixin, _ActiveModeMixin):
         packet_validator: Callable[[bytes, ModelProfile], None] = require_profile_packet,
     ) -> None:
         """Write on the caller's connection without changing its transaction policy."""
+        try:
+            self._require_not_dreamview_claimed()
+        except BleakError:
+            await self._disconnect_locked()
+            raise
         if arm_expected and (self._segment_query_incomplete or self._bulk_query_incomplete):
             # The caller owns reconnect/retry policy; never write across an abandoned query.
             query_kind = "segment" if self._segment_query_incomplete else "bulk"
@@ -2370,6 +2397,11 @@ class GoveeBLECoordinator(_DreamviewMixin, _ActiveModeMixin):
             wire_packet = self._encryption.encode(wire_packet)
         if before_write is not None:
             before_write()
+        try:
+            self._require_not_dreamview_claimed()
+        except DreamviewClaimedError:
+            await self._disconnect_locked()
+            raise
         packet_validator(packet, self.profile)
         self._validate_authorized_packet(packet)
         if (
@@ -3567,6 +3599,7 @@ class GoveeBLECoordinator(_DreamviewMixin, _ActiveModeMixin):
             raise RuntimeError("Home Assistant is stopping")
         async with async_control_intent(self, ControlIntent.PREVIEW):
             async with self._lock:
+                self._require_not_dreamview_claimed()
                 client = self._client
                 if client is None or not client.is_connected:
                     raise BleakError(f"Device {self.address} disconnected during preview")
@@ -3627,6 +3660,7 @@ class GoveeBLECoordinator(_DreamviewMixin, _ActiveModeMixin):
             # Preview writers acquire _lock themselves. The existing control intent
             # still owns the entire upload/ACK/selector transaction.
             async with self._lock if writer is None else nullcontext():
+                self._require_not_dreamview_claimed()
                 attempts = EFFECT_SEQUENCE_ATTEMPTS if writer is None else 1
                 for attempt in range(1, attempts + 1):
                     future: asyncio.Future[bool] | None = None
@@ -3639,12 +3673,14 @@ class GoveeBLECoordinator(_DreamviewMixin, _ActiveModeMixin):
                                 raise BleakError("Device disconnected during preview")
                             client = self._client
                         token, generation = self._notification_token, self._profile_generation
+                        self._require_not_dreamview_claimed()
 
                         def check_connection(
                             client: BleakClient = client,
                             token: object | None = token,
                             generation: int = generation,
                         ) -> None:
+                            self._require_not_dreamview_claimed()
                             if (
                                 self._client is not client
                                 or not client.is_connected
@@ -3656,6 +3692,7 @@ class GoveeBLECoordinator(_DreamviewMixin, _ActiveModeMixin):
 
                         if attempt_started is not None:
                             await attempt_started(attempt)
+                        self._require_not_dreamview_claimed()
                         if before_write is not None:
                             await before_write()
                         for index, packet in enumerate(packets, start=1):
@@ -3673,6 +3710,7 @@ class GoveeBLECoordinator(_DreamviewMixin, _ActiveModeMixin):
                                 generation: int = generation,
                             ) -> None:
                                 nonlocal future
+                                self._require_not_dreamview_claimed()
                                 if self._profile_generation != generation:
                                     raise ValueError("Device profile changed during effect upload")
                                 if require_upload_ack or writer is not None:
@@ -3726,6 +3764,8 @@ class GoveeBLECoordinator(_DreamviewMixin, _ActiveModeMixin):
                             raise
                         self._upload_ack = None
                         await self._disconnect_locked()
+                        if isinstance(err, DreamviewClaimedError):
+                            raise
                         if self.hass.is_stopping:
                             raise RuntimeError("Home Assistant is stopping") from err
                         if attempt == attempts or (retry_allowed is not None and not retry_allowed()):
@@ -4000,6 +4040,7 @@ class GoveeBLECoordinator(_DreamviewMixin, _ActiveModeMixin):
         intent = ControlIntent.USER if current_intent is None else current_intent
         async with async_control_intent(self, intent):
             async with self._lock:
+                self._require_not_dreamview_claimed()
                 for attempt in range(3):
                     try:
                         client = await self._ensure_connected()
@@ -4010,6 +4051,8 @@ class GoveeBLECoordinator(_DreamviewMixin, _ActiveModeMixin):
                         return
                     except BleakError as err:
                         await self._disconnect_locked()
+                        if isinstance(err, DreamviewClaimedError):
+                            raise
                         if attempt == 2:
                             _LOGGER.error("Failed to send to %s after 3 attempts", self.address)
                             raise
@@ -4147,7 +4190,8 @@ class GoveeBLECoordinator(_DreamviewMixin, _ActiveModeMixin):
         intent: ControlIntent = ControlIntent.USER,
     ) -> None:
         async with async_control_intent(self, intent):
-            await self._disconnect_locked()
+            async with self._lock:
+                await self._disconnect_locked()
 
     async def _disconnect_locked(self, *, clear_cache: bool = False) -> None:
         client = self._client
@@ -4182,6 +4226,15 @@ class GoveeBLECoordinator(_DreamviewMixin, _ActiveModeMixin):
             _LOGGER.debug("Error disconnecting from %s", self.address)
         finally:
             self._clear_client_state(client)
+            if (
+                client is not None
+                and client.is_connected
+                and is_dreamview_claimed(
+                    self.hass, self.config_entry.entry_id if self.config_entry is not None else None, self
+                )
+            ):
+                # Retain a failed physical link so handover cannot mistake cleared state for release.
+                self._client = client
             if self._intentional_disconnect_client is client:
                 self._intentional_disconnect_client = None
 

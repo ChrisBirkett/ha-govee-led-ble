@@ -44,12 +44,16 @@ from tests.test_govee_encryption import KEY, negotiate
 
 PROFILE = get_profile("H6099")
 _STORE_WRITE_DATA = Store._async_write_data
+_STORE_LOAD = Store._async_load
 
 
 @pytest.fixture
 def durable_storage(hass_storage):
-    """Restore HA's real writer inside the in-memory storage fixture's lifetime."""
-    with patch.object(Store, "_async_write_data", _STORE_WRITE_DATA):
+    """Restore HA's real disk reads and writes inside the storage fixture."""
+    with (
+        patch.object(Store, "_async_write_data", _STORE_WRITE_DATA),
+        patch.object(Store, "_async_load", _STORE_LOAD),
+    ):
         yield
 
 
@@ -175,8 +179,8 @@ def test_individual_queries_and_truthful_raw_status() -> None:
         build_dreamview_query("sample", replace(PROFILE, dreamview_grammar="unknown"))
 
 
-def coordinator(hass, model="H6099") -> Any:
-    entry = MockConfigEntry(domain=DOMAIN, data={}, entry_id="dreamview-entry")
+def coordinator(hass, model="H6099", *, entry_id="dreamview-entry") -> Any:
+    entry = MockConfigEntry(domain=DOMAIN, data={}, entry_id=entry_id)
     entry.add_to_hass(hass)
     with current_entry.set(entry):
         c = GoveeBLECoordinator(hass, "00:00:00:00:00:01", model, configuration_url="http://example.test")
@@ -431,3 +435,622 @@ async def test_concrete_encrypted_notifications_and_private_logs(hass, caplog):
     c._notify_callback(None, bytearray(frame("aa600901")))
     assert c._dreamview_observed["saturation"]["saturation"] == 1
     assert c.packet_log[-1]["raw"] == frame("aa600901").hex() and not c.packet_log[-1]["redacted"]
+
+
+async def test_dreamview_member_handover_replacement_rollback_and_delete(hass, monkeypatch) -> None:
+    from homeassistant.config_entries import ConfigEntryDisabler
+
+    from custom_components.ha_govee_led_ble.coordinator_dreamview import async_load_dreamview_claims
+
+    monkeypatch.setattr(
+        "custom_components.ha_govee_led_ble.bluetooth.async_last_service_info", lambda *_args, **_kwargs: None
+    )
+    centre = coordinator(hass, "H66A0")
+    centre_client = SimpleNamespace(is_connected=True, write_gatt_char=AsyncMock(), disconnect=AsyncMock())
+    centre._client = centre_client
+    centre._ensure_connected = AsyncMock(return_value=centre_client)
+    centre._renew_foreground_lease = Mock()
+
+    # Member 1: enabled HA entry matched by MAC address, actively connected.
+    m1_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="11:22:33:44:55:01",
+        title="Strip 1",
+        data={"model": "H1A42"},
+        entry_id="member-1",
+    )
+    m1_entry.add_to_hass(hass)
+    with current_entry.set(m1_entry):
+        m1_coord: Any = GoveeBLECoordinator(hass, "11:22:33:44:55:01", "H1A42", configuration_url=None)
+    m1_client = SimpleNamespace(is_connected=True, write_gatt_char=AsyncMock())
+
+    async def disconnect_m1():
+        m1_client.is_connected = False
+
+    m1_client.disconnect = AsyncMock(side_effect=disconnect_m1)
+    m1_coord._client = m1_client
+    m1_entry.runtime_data = m1_coord
+
+    # Member 2: enabled HA entry matched by BLE name.
+    m2_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="11:22:33:44:55:02",
+        title="Govee_H61F5_5502",
+        data={"model": "H61F5"},
+        entry_id="member-2",
+    )
+    m2_entry.add_to_hass(hass)
+    with current_entry.set(m2_entry):
+        m2_coord = GoveeBLECoordinator(hass, "11:22:33:44:55:02", "H61F5", configuration_url=None)
+    m2_entry.runtime_data = m2_coord
+
+    # Member 3: already user-disabled HA entry (must NOT be re-enabled on delete).
+    m3_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="11:22:33:44:55:03",
+        title="Pre-disabled Strip",
+        data={"model": "H1A42"},
+        entry_id="member-3",
+        disabled_by=ConfigEntryDisabler.USER,
+    )
+    m3_entry.add_to_hass(hass)
+
+    async def fake_set_disabled_by(entry_id: str, disabled_by: ConfigEntryDisabler | None) -> bool:
+        target = hass.config_entries.async_get_entry(entry_id)
+        assert target is not None
+        target.disabled_by = disabled_by
+        return True
+
+    monkeypatch.setattr(hass.config_entries, "async_set_disabled_by", AsyncMock(side_effect=fake_set_disabled_by))
+
+    events: list[str] = []
+
+    async def record_write(_uuid, packet, **_kwargs):
+        if not events:
+            # Verify m1 is already disabled and physically disconnected before packet 0 is written.
+            assert m1_entry.disabled_by == ConfigEntryDisabler.USER
+            assert not m1_client.is_connected
+            assert m1_coord._dreamview_claimed
+        events.append("tx")
+
+    centre_client.write_gatt_char.side_effect = record_write
+
+    # Include m1 (by address), m2 (by name), m3 (pre-disabled), and an external non-HA member.
+    await centre.async_replace_dreamview_group(
+        (
+            member(address="11:22:33:44:55:01", cmd_ver=1, zones=(1, 2, 3, 4, 5)),
+            member(address=None, name="Govee_H61F5_5502", cmd_ver=1, zones=(6, 7, 8, 9, 10)),
+            member(address="11:22:33:44:55:03", cmd_ver=1, zones=(1,)),
+            member(address="99:88:77:66:55:44", cmd_ver=1, zones=(2,)),
+        )
+    )
+    assert events
+    claims = await async_load_dreamview_claims(hass)
+    assert claims["member-1"]["disabled_by_dreamview"] is True
+    assert claims["member-2"]["disabled_by_dreamview"] is True
+    assert claims["member-3"]["disabled_by_dreamview"] is False
+    assert claims["member-3"]["prior_disabled_by"] == str(ConfigEntryDisabler.USER)
+
+    # Stale coordinator barrier: claimed member cannot reconnect or write packets.
+    with pytest.raises(BleakError, match="DreamView"):
+        await m1_coord._ensure_connected()
+    with pytest.raises(BleakError, match="DreamView"):
+        await m1_coord._async_write_packet(m1_client, frame("330101"))
+
+    # Replace group dropping m2: m2 is released and re-enabled after new 0x50 upload succeeds.
+    await centre.async_replace_dreamview_group(
+        (
+            member(address="11:22:33:44:55:01", cmd_ver=1, zones=(1, 2, 3, 4, 5)),
+            member(address="11:22:33:44:55:03", cmd_ver=1, zones=(1,)),
+        )
+    )
+    assert m2_entry.disabled_by is None
+    assert not m2_coord._dreamview_claimed
+    assert "member-2" not in await async_load_dreamview_claims(hass)
+    assert m1_entry.disabled_by == ConfigEntryDisabler.USER
+
+    # Failed delete_dreamview_group over BLE keeps claims intact and m1 disabled.
+    centre_client.write_gatt_char.side_effect = BleakError("delete failed")
+    with pytest.raises(BleakError):
+        await centre.async_delete_dreamview_group()
+    assert m1_entry.disabled_by == ConfigEntryDisabler.USER
+    assert "member-1" in await async_load_dreamview_claims(hass)
+
+    # Successful delete_dreamview_group re-enables m1, while keeping pre-disabled m3 disabled.
+    centre_client.write_gatt_char.side_effect = None
+    await centre.async_delete_dreamview_group()
+    assert m1_entry.disabled_by is None
+    assert not m1_coord._dreamview_claimed
+    assert m3_entry.disabled_by == ConfigEntryDisabler.USER
+    assert await async_load_dreamview_claims(hass) == {}
+
+    # Pre-transmission failure (not_attempted) rolls back newly claimed member.
+    centre._ensure_connected = AsyncMock(side_effect=BleakError("centre unreachable"))
+    with pytest.raises(BleakError):
+        await centre.async_replace_dreamview_group((member(address="11:22:33:44:55:02", cmd_ver=1, zones=(1,)),))
+    assert centre._dreamview_last_write == "not_attempted"
+    assert m2_entry.disabled_by is None
+    assert not m2_coord._dreamview_claimed
+    assert await async_load_dreamview_claims(hass) == {}
+
+
+async def test_dreamview_member_validation_and_crash_consistency_guard(hass, monkeypatch) -> None:
+    from homeassistant.config_entries import ConfigEntryDisabler
+    from homeassistant.exceptions import ConfigEntryNotReady
+
+    from custom_components.ha_govee_led_ble import async_remove_entry, async_setup_entry
+    from custom_components.ha_govee_led_ble.coordinator_dreamview import (
+        _async_save_dreamview_claims,
+        async_load_dreamview_claims,
+    )
+
+    centre = coordinator(hass, "H66A0")
+    object.__setattr__(centre.config_entry, "unique_id", "00:00:00:00:00:01")
+    entity = SimpleNamespace(coordinator=centre, _async_supersede_preview=AsyncMock())
+    monkeypatch.setattr(
+        "custom_components.ha_govee_led_ble.bluetooth.async_last_service_info",
+        lambda *_args, **_kwargs: None,
+    )
+    monkeypatch.setattr("custom_components.ha_govee_led_ble._async_update_editor_panel", AsyncMock())
+
+    m1_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="11:22:33:44:55:11",
+        title="Shared Name",
+        data={"model": "H1A42"},
+        entry_id="member-a",
+    )
+    m1_entry.add_to_hass(hass)
+    m2_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="11:22:33:44:55:12",
+        title="Shared Name",
+        data={"model": "H61F5"},
+        entry_id="member-b",
+    )
+    m2_entry.add_to_hass(hass)
+    other_centre = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="00:00:00:00:00:99",
+        title="Other Centre",
+        data={"model": "H6099"},
+        entry_id="other-centre",
+    )
+    other_centre.add_to_hass(hass)
+    await _async_save_dreamview_claims(
+        hass,
+        {"member-b": {"centre_entry_id": "other-centre", "disabled_by_dreamview": True, "prior_disabled_by": None}},
+    )
+
+    # Self-membership, ambiguous name, duplicate entry (address + name), and cross-centre conflict fail before preview.
+    for invalid_members in (
+        [member(address="00:00:00:00:00:01", cmd_ver=1, zones=(1,)).as_dict()],
+        [member(address=None, name="Shared Name", cmd_ver=1, zones=(1,)).as_dict()],
+        [member(address="11:22:33:44:55:12", cmd_ver=1, zones=(1,)).as_dict()],
+    ):
+        with pytest.raises(ServiceValidationError):
+            await _async_dreamview_service(
+                entity,
+                ServiceCall(hass, DOMAIN, "replace_dreamview_group", {"members": invalid_members}),
+                name="replace_dreamview_group",
+            )
+    entity._async_supersede_preview.assert_not_awaited()
+    monkeypatch.setattr(
+        "custom_components.ha_govee_led_ble.bluetooth.async_last_service_info",
+        lambda _hass, address, **_kwargs: (
+            SimpleNamespace(name="Shared Name") if address == m1_entry.unique_id else None
+        ),
+    )
+    assert await centre.async_validate_dreamview_members((member(address=None, name="Shared Name"),)) == (m1_entry,)
+    with pytest.raises(ValueError, match="Duplicate DreamView member config entry"):
+        await centre.async_validate_dreamview_members(
+            (member(address=m1_entry.unique_id), member(address=None, name="Shared Name"))
+        )
+
+    # Crash-consistency guard: member-b is claimed by other-centre with disabled_by_dreamview=True,
+    # but m2_entry.disabled_by is still None on startup.
+    set_disabled = AsyncMock()
+    monkeypatch.setattr(hass.config_entries, "async_set_disabled_by", set_disabled)
+    with pytest.raises(ConfigEntryNotReady):
+        await async_setup_entry(hass, m2_entry)
+    await hass.async_block_till_done()
+    set_disabled.assert_awaited_once_with("member-b", ConfigEntryDisabler.USER)
+
+    # Removing other-centre releases member-b's claim.
+    await async_remove_entry(hass, other_centre)
+    assert "member-b" not in await async_load_dreamview_claims(hass)
+
+
+@pytest.mark.parametrize("same_member", [False, True])
+async def test_concurrent_dreamview_centres_preserve_claims_and_reject_conflicts(hass, monkeypatch, same_member):
+    from homeassistant.config_entries import ConfigEntryDisabler
+
+    from custom_components.ha_govee_led_ble.coordinator_dreamview import async_load_dreamview_claims
+
+    centres = [coordinator(hass, "H66A0", entry_id=f"centre-{i}") for i in range(2)]
+    entries = []
+    for i in range(2):
+        entry = MockConfigEntry(domain=DOMAIN, unique_id=f"11:22:33:44:55:{i:02x}", entry_id=f"member-{i}")
+        entry.add_to_hass(hass)
+        entries.append(entry)
+
+    async def set_disabled(entry_id, disabled_by):
+        hass.config_entries.async_get_known_entry(entry_id).disabled_by = disabled_by
+
+    monkeypatch.setattr(hass.config_entries, "async_set_disabled_by", AsyncMock(side_effect=set_disabled))
+    entered, proceed = asyncio.Event(), asyncio.Event()
+    original_save = centres[0]._dreamview_store.async_save
+
+    async def paused_save(data):
+        entered.set()
+        await proceed.wait()
+        await original_save(data)
+
+    centres[0]._dreamview_store.async_save = paused_save
+    for centre in centres:
+        centre.async_write_effect_sequence = AsyncMock()
+    first = asyncio.create_task(centres[0].async_replace_dreamview_group((member(address=entries[0].unique_id),)))
+    await entered.wait()
+    second = asyncio.create_task(
+        centres[1].async_replace_dreamview_group((member(address=entries[0 if same_member else 1].unique_id),))
+    )
+    await asyncio.sleep(0)
+    proceed.set()
+    results = await asyncio.gather(first, second, return_exceptions=True)
+    claims = await async_load_dreamview_claims(hass)
+    assert results[0] is None
+    assert claims["member-0"]["centre_entry_id"] == "centre-0"
+    if same_member:
+        assert isinstance(results[1], ValueError)
+        centres[1].async_write_effect_sequence.assert_not_awaited()
+        assert len(claims) == 1
+    else:
+        assert results[1] is None
+        assert claims["member-1"]["centre_entry_id"] == "centre-1"
+    assert entries[0].disabled_by == ConfigEntryDisabler.USER
+    for centre in centres:
+        await centre.async_delete_dreamview_group()
+    assert all(entry.disabled_by is None for entry in entries)
+    assert await async_load_dreamview_claims(hass) == {}
+
+
+@pytest.mark.parametrize("failure", ["disable", "disconnect"])
+async def test_dreamview_failed_handover_never_uploads_and_restores_preview(hass, monkeypatch, failure):
+    from homeassistant.config_entries import ConfigEntryDisabler
+
+    from custom_components.ha_govee_led_ble.coordinator_dreamview import async_load_dreamview_claims
+
+    centre = coordinator(hass, "H66A0")
+    target = coordinator(hass, "H1A42", entry_id="member")
+    entry = target.config_entry
+    object.__setattr__(entry, "unique_id", "11:22:33:44:55:01")
+    entry.runtime_data = target
+    client = SimpleNamespace(is_connected=True, disconnect=AsyncMock(side_effect=BleakError("disconnect failed")))
+    target._client = client
+    preview = SimpleNamespace(async_unload_device=AsyncMock(), async_load_device=AsyncMock())
+    monkeypatch.setattr(
+        "custom_components.ha_govee_led_ble.effect_setup.get_effect_backend",
+        lambda _hass: SimpleNamespace(preview=preview),
+    )
+
+    async def set_disabled(entry_id, disabled_by):
+        if failure == "disable" and disabled_by == ConfigEntryDisabler.USER:
+            raise RuntimeError("disable failed")
+        entry.disabled_by = disabled_by
+        if disabled_by is not None:
+            await target.disconnect()
+
+    monkeypatch.setattr(hass.config_entries, "async_set_disabled_by", AsyncMock(side_effect=set_disabled))
+    centre.async_write_effect_sequence = AsyncMock()
+    with pytest.raises((BleakError, RuntimeError), match="failed|released"):
+        await centre.async_replace_dreamview_group((member(address=entry.unique_id),))
+    centre.async_write_effect_sequence.assert_not_awaited()
+    assert client.is_connected
+    assert entry.disabled_by is None
+    assert not target._dreamview_claimed
+    assert centre._dreamview_authored is None
+    assert await async_load_dreamview_claims(hass) == {}
+    preview.async_load_device.assert_awaited_once_with(entry.entry_id)
+
+
+async def test_dreamview_restoration_failure_retains_restart_recovery(hass, monkeypatch):
+    from homeassistant.config_entries import ConfigEntryDisabler
+
+    from custom_components.ha_govee_led_ble.coordinator_dreamview import (
+        DREAMVIEW_CLAIMS_DATA_KEY,
+        async_load_dreamview_claims,
+        async_recover_dreamview_claims,
+        async_release_dreamview_claims_for_centre,
+        is_dreamview_claimed,
+    )
+
+    centre = coordinator(hass, "H66A0")
+    centre.async_write_effect_sequence = AsyncMock()
+    entry = MockConfigEntry(domain=DOMAIN, unique_id="11:22:33:44:55:01", entry_id="member")
+    entry.add_to_hass(hass)
+
+    async def set_disabled(entry_id, disabled_by):
+        entry.disabled_by = disabled_by
+
+    monkeypatch.setattr(hass.config_entries, "async_set_disabled_by", AsyncMock(side_effect=set_disabled))
+    await centre.async_replace_dreamview_group((member(address=entry.unique_id),))
+    monkeypatch.setattr(
+        hass.config_entries, "async_set_disabled_by", AsyncMock(side_effect=RuntimeError("restore failed"))
+    )
+    with pytest.raises(RuntimeError, match="restore failed"):
+        await async_release_dreamview_claims_for_centre(hass, centre.config_entry.entry_id)
+    assert entry.disabled_by == ConfigEntryDisabler.USER
+    assert (await async_load_dreamview_claims(hass))["member"]["releasing"]
+    assert not is_dreamview_claimed(hass, "member")
+    with pytest.raises(ValueError, match="restoration is pending"):
+        await centre.async_validate_dreamview_members((member(address=entry.unique_id),))
+
+    hass.data[DOMAIN].pop(DREAMVIEW_CLAIMS_DATA_KEY)
+    monkeypatch.setattr(hass.config_entries, "async_set_disabled_by", AsyncMock(side_effect=set_disabled))
+    await async_recover_dreamview_claims(hass)
+    assert entry.disabled_by is None
+    assert await async_load_dreamview_claims(hass) == {}
+
+
+@pytest.mark.parametrize("fail_native_save", [False, True])
+async def test_dreamview_restoration_journal_outlives_native_enable_persistence(
+    hass, monkeypatch, tmp_path, durable_storage, fail_native_save
+):
+    from homeassistant.config_entries import ConfigEntryDisabler
+
+    from custom_components.ha_govee_led_ble.coordinator_dreamview import (
+        _async_save_dreamview_claims,
+        async_load_dreamview_claims,
+        async_recover_dreamview_claims,
+        async_release_dreamview_claims_for_centre,
+    )
+
+    hass.config.config_dir = str(tmp_path)
+    centre = coordinator(hass, "H66A0")
+    entry = MockConfigEntry(domain=DOMAIN, entry_id="member", disabled_by=ConfigEntryDisabler.USER)
+    entry.add_to_hass(hass)
+    native_store = hass.config_entries._store
+    await native_store.async_save(hass.config_entries._data_to_save())
+    native_path = Path(native_store.path)
+    await _async_save_dreamview_claims(
+        hass, {"member": {"centre_entry_id": centre.config_entry.entry_id, "disabled_by_dreamview": True}}
+    )
+    hass.config.components.add(DOMAIN)
+    monkeypatch.setattr(hass.config_entries, "async_setup", AsyncMock(return_value=True))
+    if fail_native_save:
+        with patch.object(native_store, "_async_write_data", side_effect=WriteError("native save failed")):
+            with pytest.raises(OSError, match="restoration could not be persisted"):
+                await async_release_dreamview_claims_for_centre(hass, centre.config_entry.entry_id)
+        assert entry.disabled_by is None
+        assert (await async_load_dreamview_claims(hass))["member"]["releasing"]
+        stored = json.loads(await hass.async_add_executor_job(native_path.read_bytes))
+        assert next(item for item in stored["data"]["entries"] if item["entry_id"] == "member")["disabled_by"] == "user"
+        await async_recover_dreamview_claims(hass)
+    else:
+        await async_release_dreamview_claims_for_centre(hass, centre.config_entry.entry_id)
+    assert await async_load_dreamview_claims(hass) == {}
+    stored = json.loads(await hass.async_add_executor_job(native_path.read_bytes))
+    assert next(item for item in stored["data"]["entries"] if item["entry_id"] == "member")["disabled_by"] is None
+
+
+async def test_dreamview_restoration_preserves_a_subsequent_deliberate_disable(hass, monkeypatch):
+    from homeassistant.config_entries import ConfigEntryDisabler
+
+    from custom_components.ha_govee_led_ble.coordinator_dreamview import (
+        _async_save_dreamview_claims,
+        async_load_dreamview_claims,
+        async_release_dreamview_claims_for_centre,
+    )
+
+    centre = coordinator(hass, "H66A0")
+    entries = [
+        MockConfigEntry(domain=DOMAIN, entry_id=f"member-{i}", disabled_by=ConfigEntryDisabler.USER) for i in range(2)
+    ]
+    for entry in entries:
+        entry.add_to_hass(hass)
+    await _async_save_dreamview_claims(
+        hass,
+        {
+            entry.entry_id: {"centre_entry_id": centre.config_entry.entry_id, "disabled_by_dreamview": True}
+            for entry in entries
+        },
+    )
+    hass.config.components.add(DOMAIN)
+
+    async def setup(entry_id, **_kwargs):
+        if entry_id == "member-1":
+            await hass.config_entries.async_set_disabled_by("member-0", ConfigEntryDisabler.USER)
+        return True
+
+    monkeypatch.setattr(hass.config_entries, "async_setup", AsyncMock(side_effect=setup))
+    await async_release_dreamview_claims_for_centre(hass, centre.config_entry.entry_id)
+    assert entries[0].disabled_by == ConfigEntryDisabler.USER
+    assert entries[1].disabled_by is None
+    assert await async_load_dreamview_claims(hass) == {}
+
+
+async def test_cancelled_dreamview_native_flush_keeps_storage_serialised(hass, monkeypatch):
+    from custom_components.ha_govee_led_ble.coordinator_dreamview import _async_persist_dreamview_restoration
+
+    entry = MockConfigEntry(domain=DOMAIN, entry_id="member")
+    entry.add_to_hass(hass)
+    native_store = hass.config_entries._store
+    entered, proceed = asyncio.Event(), asyncio.Event()
+    persisted = {}
+
+    async def write(data):
+        if "revision" not in data["data"]:
+            entered.set()
+            await proceed.wait()
+        persisted["revision"] = data["data"].get("revision", 0)
+
+    monkeypatch.setattr(native_store, "_async_write_data", write)
+    flush = asyncio.create_task(_async_persist_dreamview_restoration(hass, {"member"}))
+    await entered.wait()
+    flush.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await flush
+    later = asyncio.create_task(native_store.async_save({"entries": [], "revision": 1}))
+    try:
+        await asyncio.sleep(0)
+        assert not later.done()
+    finally:
+        proceed.set()
+        await later
+        await hass.async_block_till_done()
+    assert persisted["revision"] == 1
+
+
+async def test_dreamview_manual_enable_of_predisabled_member_preserves_intent_without_coordinator(hass, monkeypatch):
+    from homeassistant.config_entries import ConfigEntryDisabler
+    from homeassistant.exceptions import ConfigEntryNotReady
+
+    from custom_components.ha_govee_led_ble import async_setup_entry
+    from custom_components.ha_govee_led_ble.coordinator_dreamview import async_load_dreamview_claims
+
+    centre = coordinator(hass, "H66A0")
+    centre.async_write_effect_sequence = AsyncMock()
+    entry = MockConfigEntry(
+        domain=DOMAIN, unique_id="11:22:33:44:55:01", entry_id="member", disabled_by=ConfigEntryDisabler.USER
+    )
+    entry.add_to_hass(hass)
+    await centre.async_replace_dreamview_group((member(address=entry.unique_id),))
+    assert not (await async_load_dreamview_claims(hass))["member"]["disabled_by_dreamview"]
+    entry.disabled_by = None
+
+    async def set_disabled(entry_id, disabled_by):
+        entry.disabled_by = disabled_by
+
+    monkeypatch.setattr(hass.config_entries, "async_set_disabled_by", AsyncMock(side_effect=set_disabled))
+    with patch("custom_components.ha_govee_led_ble.GoveeBLECoordinator") as constructor:
+        with pytest.raises(ConfigEntryNotReady):
+            await async_setup_entry(hass, entry)
+        constructor.assert_not_called()
+    await hass.async_block_till_done()
+    assert entry.disabled_by == ConfigEntryDisabler.USER
+    await centre.async_delete_dreamview_group()
+    assert entry.disabled_by is None
+
+
+async def test_dreamview_disconnect_failure_does_not_poison_native_entry_unload(hass, monkeypatch):
+    from homeassistant.config_entries import ConfigEntryState
+
+    from custom_components import ha_govee_led_ble as integration
+    from custom_components.ha_govee_led_ble.coordinator_dreamview import async_load_dreamview_claims
+
+    centre = coordinator(hass, "H66A0")
+    centre.async_write_effect_sequence = AsyncMock()
+    entry = MockConfigEntry(
+        domain=DOMAIN, unique_id="11:22:33:44:55:01", entry_id="member", state=ConfigEntryState.LOADED
+    )
+    entry.add_to_hass(hass)
+    with current_entry.set(entry):
+        target: Any = GoveeBLECoordinator(hass, entry.unique_id, "H1A42", configuration_url=None)
+    entry.runtime_data = target
+    client = SimpleNamespace(is_connected=True, disconnect=AsyncMock(side_effect=BleakError("release failed")))
+    target._client = client
+    entry._integration_for_domain = SimpleNamespace(
+        domain=DOMAIN, async_get_component=AsyncMock(return_value=integration)
+    )
+    hass.config.components.add(DOMAIN)
+    monkeypatch.setattr(hass.config_entries, "async_unload_platforms", AsyncMock(return_value=True))
+    monkeypatch.setattr(hass.config_entries, "async_setup", AsyncMock(return_value=True))
+    monkeypatch.setattr(integration, "_async_update_editor_panel", AsyncMock())
+    with pytest.raises(BleakError, match="could not be released"):
+        await centre.async_replace_dreamview_group((member(address=entry.unique_id),))
+    assert entry.state == ConfigEntryState.NOT_LOADED
+    assert entry.disabled_by is None
+    assert target._client is client
+    assert await async_load_dreamview_claims(hass) == {}
+    centre.async_write_effect_sequence.assert_not_awaited()
+
+
+async def test_dreamview_startup_disable_does_not_hold_claims_lock_while_waiting_for_setup(hass):
+    from custom_components.ha_govee_led_ble.coordinator_dreamview import (
+        _async_save_dreamview_claims,
+        _claims_lock,
+        async_guard_dreamview_entry,
+    )
+
+    centre = coordinator(hass, "H66A0")
+    entry = MockConfigEntry(domain=DOMAIN, unique_id="11:22:33:44:55:01", entry_id="member")
+    entry.add_to_hass(hass)
+    hass.config.components.add(DOMAIN)
+    await _async_save_dreamview_claims(
+        hass,
+        {"member": {"centre_entry_id": centre.config_entry.entry_id, "disabled_by_dreamview": True}},
+    )
+    async with entry.setup_lock:
+        assert await async_guard_dreamview_entry(hass, entry)
+        await asyncio.sleep(0)
+        async with asyncio.timeout(0.2):
+            async with _claims_lock(hass):
+                pass
+    await hass.async_block_till_done()
+    assert entry.disabled_by is not None
+
+
+async def test_dreamview_claim_blocks_queued_commands_callbacks_and_physical_write(hass):
+    from custom_components.ha_govee_led_ble.control_arbiter import ControlIntent
+
+    target = coordinator(hass)
+    client = SimpleNamespace(is_connected=True, write_gatt_char=AsyncMock(), disconnect=AsyncMock())
+    target._client = client
+    target._ensure_connected = AsyncMock(return_value=client)
+    packet = frame("330101")
+    await target._lock.acquire()
+    queued = asyncio.create_task(target.send_command(packet))
+    await asyncio.sleep(0)
+    target._dreamview_claimed = True
+    target._lock.release()
+    with pytest.raises(BleakError, match="DreamView"):
+        await queued
+    target._ensure_connected.assert_not_awaited()
+    before, started, writer = AsyncMock(), AsyncMock(), AsyncMock()
+    with pytest.raises(BleakError, match="DreamView"):
+        await target.async_write_effect_sequence(
+            (packet,), intent=ControlIntent.APPLY, before_write=before, attempt_started=started, writer=writer
+        )
+    before.assert_not_awaited()
+    started.assert_not_awaited()
+    writer.assert_not_awaited()
+    target._dreamview_claimed = False
+
+    def claim():
+        target._dreamview_claimed = True
+
+    with pytest.raises(BleakError, match="DreamView"):
+        await target._async_write_packet(client, packet, arm_expected=True, before_write=claim)
+    assert target.control_write_attempts == 0
+    client.write_gatt_char.assert_not_awaited()
+
+
+@pytest.mark.parametrize("during_encryption", [False, True])
+async def test_dreamview_mid_connection_claim_aborts_without_retry_or_crypto_mask(hass, monkeypatch, during_encryption):
+    from custom_components.ha_govee_led_ble.govee_encryption.session import GoveeEncryptionSession
+
+    target = coordinator(hass)
+    client = SimpleNamespace(is_connected=True, disconnect=AsyncMock(), write_gatt_char=AsyncMock())
+
+    async def disconnect():
+        client.is_connected = False
+
+    client.disconnect.side_effect = disconnect
+
+    async def establish(*_args, **_kwargs):
+        if not during_encryption:
+            target._dreamview_claimed = True
+        return client
+
+    async def select(session, *_args, **_kwargs):
+        session.version = 1
+        target._dreamview_claimed = True
+
+    connect = AsyncMock(side_effect=establish)
+    monkeypatch.setattr("custom_components.ha_govee_led_ble.coordinator.async_establish_ble_connection", connect)
+    monkeypatch.setattr(GoveeEncryptionSession, "async_select", select)
+    with pytest.raises(BleakError, match="DreamView"):
+        await target.send_command(frame("330101"))
+    connect.assert_awaited_once()
+    assert not client.is_connected
+    client.write_gatt_char.assert_not_awaited()

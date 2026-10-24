@@ -211,3 +211,35 @@ async def test_h6099_service_still_rejects_eighth_slot_before_preview(hass):
             name="set_dreamview_member_brightness",
         )
     entity._async_supersede_preview.assert_not_awaited()
+
+
+async def test_h66a0_dreamview_profile_capacity_and_synthetic_group(hass):
+    h66a0 = get_profile("H66A0")
+    assert h66a0.dreamview_grammar == "H6099"
+    assert h66a0.dreamview_max_sub_devices == 10
+    ten = tuple(member(address=f"00:00:00:00:00:{i:02x}") for i in range(10))
+    assert build_dreamview_group(ten, h66a0)
+    with pytest.raises(ValueError):
+        build_dreamview_group((*ten, member(address="00:00:00:00:00:0a")), h66a0)
+    assert build_dreamview_command("member_brightness", {"index": 9, "level": 80}, h66a0) == frame("3360035009")
+    assert build_dreamview_command("member_connect", {"index": 9, "connected": True}, h66a0) == frame("3360050901")
+    with pytest.raises(ValueError):
+        build_dreamview_command("member_brightness", {"index": 10, "level": 80}, h66a0)
+
+    # Synthetic members exercise the two-member layout reported in issue #408.
+    h1a42_member = member(
+        address="AA:BB:CC:DD:EE:01",
+        cmd_ver=1,
+        is_rgbic=True,
+        zones=(5, 4, 3, 2, 1),
+    )
+    h61f5_member = member(
+        address="AA:BB:CC:DD:EE:02",
+        cmd_ver=1,
+        is_rgbic=True,
+        zones=(6, 7, 8, 9, 10),
+    )
+    packets = build_dreamview_group((h1a42_member, h61f5_member), h66a0)
+    assert len(packets) == 2
+    assert packets[0][:6] == bytes.fromhex("a30001025002")
+    assert packets[1][:2] == b"\xa3\xff"

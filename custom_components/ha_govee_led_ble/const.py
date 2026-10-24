@@ -741,6 +741,32 @@ MODEL_PROFILES: dict[str, ModelProfile] = {
         effect_grammar="H6099",
         music_grammar="H66A0",
         video_grammar="H66A0-video",
+        dreamview_grammar="H6099",
+        dreamview_operations=frozenset(
+            {
+                "replace_group",
+                "delete_group",
+                "switch_group",
+                "member_brightness",
+                "same_brightness",
+                "member_connect",
+                "saturation",
+                "sample",
+                "sound",
+            }
+        ),
+        dreamview_reads=frozenset(
+            {
+                "switch_group",
+                "member_brightness",
+                "same_brightness",
+                "member_connect",
+                "saturation",
+                "sample",
+                "sound",
+            }
+        ),
+        dreamview_max_sub_devices=10,
         read_domains=frozenset(
             {
                 ReadDomain.POWER,

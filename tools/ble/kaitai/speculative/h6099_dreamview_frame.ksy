@@ -3,17 +3,23 @@ meta:
   title: H6099 MovieFeastV2 module commands and individual reads
   endian: be
 doc: |
-  SPECULATIVE H6099 issue #258.  Android 7.6.01 MovieFeastV2 control selects
-  module 0x60.  Group switch writes {on, 1}, queries with discriminator 1, and
-  reads the first reply byte as on.  Individual module 0x60 commands establish
-  the member brightness, member connection, same brightness, saturation, sample,
-  sound, and delete layouts.  Brightness reads consume all 16 returned bytes;
-  connection reads copy 10 bytes even though goods type 191 supports seven
-  members.  Never trim zeros or infer membership from slots.  Sample bytes are
-  preserved without assigning UI labels.  Unknown trailing bytes, slot occupancy,
-  and reply freshness beyond request timing are unresolved.  No digest 0x0c or
-  camera heuristic is modelled.  No official-app capture or owner qualification
-  exists for H6099.  This root does not model command ACKs.
+  SPECULATIVE H6099 issue #258, H66A0 issue #408.  Android 7.6.01 MovieFeastV2
+  control selects module 0x60.  Group switch writes {on, 1}, queries with
+  discriminator 1, and reads the first reply byte as on.  Individual module 0x60
+  commands establish the member brightness, member connection, same brightness,
+  saturation, sample, sound, and delete layouts.  Brightness reads consume all
+  16 returned bytes; connection reads copy 10 bytes (goods type 191 supports
+  seven members; goods type 327 H66A0 supports ten members).  Never trim zeros
+  or infer membership from slots.  Sample bytes are preserved without assigning
+  UI labels.  Unknown trailing bytes, slot occupancy, and reply freshness beyond
+  request timing are unresolved.  No digest 0x0c or camera heuristic is
+  modelled.  The H66A0 owner reports in issue #408 that writes for 0x01, 0x03,
+  0x04, 0x05, 0x09, 0x0b and 0x0d match official-app captures, alongside the
+  brightness query and a parsed connection reply.  Attributable raw captures
+  are not attached.  Other reads and sample (0x0a) remain structurally
+  evidenced candidates.  No official-app capture or owner qualification exists
+  for H6099.
+  This root does not model command ACKs.
 params:
   - id: is_query
     type: bool

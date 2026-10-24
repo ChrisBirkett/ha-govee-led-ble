@@ -8,6 +8,7 @@ from homeassistant.components import bluetooth, frontend
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
@@ -40,6 +41,11 @@ from .const import (
     supported_effect_categories,
 )
 from .coordinator import GoveeBLECoordinator, clear_availability_log_state
+from .coordinator_dreamview import (
+    async_cleanup_dreamview_claims_on_entry_removed,
+    async_guard_dreamview_entry,
+    async_recover_dreamview_claims,
+)
 from .editor import EDITOR_PANEL_PATH, async_register_editor_panel, editor_url
 from .effect_setup import async_setup_effects, get_effect_backend
 from .light_services import async_register_light_services
@@ -99,6 +105,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async_register_light_services(hass)
     await async_setup_effects(hass)
     await _async_update_editor_panel(hass)
+    hass.async_create_task(async_recover_dreamview_claims(hass))
     return True
 
 
@@ -242,6 +249,8 @@ def _maybe_flag_music_mode_replaced(hass: HomeAssistant, entry: GoveeBLEConfigEn
 
 async def async_setup_entry(hass: HomeAssistant, entry: GoveeBLEConfigEntry) -> bool:
     assert entry.unique_id is not None
+    if await async_guard_dreamview_entry(hass, entry):
+        raise ConfigEntryNotReady("Config entry is claimed by a DreamView sync centre")
     raw_model = entry.data.get(CONF_MODEL)
     model = resolve_model(raw_model) if isinstance(raw_model, str) else None
     issue_id = _unsupported_model_issue_id(entry)
@@ -349,7 +358,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: GoveeBLEConfigEntry) ->
     if effect_backend is not None:
         await effect_backend.preview.async_unload_device(entry.entry_id)
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        await entry.runtime_data.disconnect()
+        if (coordinator := getattr(entry, "runtime_data", None)) is not None:
+            await coordinator.disconnect()
         await _async_update_editor_panel(hass)
     elif effect_backend is not None:
         await effect_backend.preview.async_load_device(entry.entry_id)
@@ -357,6 +367,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: GoveeBLEConfigEntry) ->
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: GoveeBLEConfigEntry) -> None:
+    await async_cleanup_dreamview_claims_on_entry_removed(hass, entry.entry_id)
     effect_backend = get_effect_backend(hass)
     if effect_backend is not None:
         await asyncio.gather(
