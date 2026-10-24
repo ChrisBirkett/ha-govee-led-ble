@@ -9,6 +9,7 @@ from typing import Any
 from .h6199_calibration import WHITE_BALANCE_POSITIONS
 from .music_semantics import (
     H1A42_MUSIC_VARIANTS,
+    H61F5_MUSIC_VARIANTS,
     H66A0_MUSIC_VARIANTS,
     H617A_MUSIC_VARIANTS,
     H617C_MUSIC_VARIANTS,
@@ -195,6 +196,7 @@ class ModelProfile:
     music_params_require_activation: bool = False
     # Physical IC count is independent of logical segment_count. None means unknown.
     physical_ic_count: int | None = None
+    ic_per_segment: int | None = None
     music_sensitivity_min: int = 0
     music_sensitivity_max: int = 99
     supports_music_color: bool = False
@@ -870,6 +872,75 @@ MODEL_PROFILES: dict[str, ModelProfile] = {
         supports_segment_brightness=True,
         supports_segment_color_temperature=True,
         scene_catalogue_sku="H1A42",
+        effect_readback="diy_code_only",
+        boolean_controls=frozenset({"gradual"}),
+    ),
+    "H61F5": ModelProfile(
+        "H61F5 Strip Light 2 Pro",
+        support_quality=SupportQuality.EXPERIMENTAL,
+        command_grammar="H617A",
+        status_grammar="H61F5",
+        effect_grammar="H617A",
+        music_grammar="H61F5",
+        static_readback_kelvin=True,
+        static_readback_zero_kelvin_is_rgb=True,
+        static_readback_gradual=True,
+        read_domains=frozenset(
+            {
+                ReadDomain.POWER,
+                ReadDomain.BRIGHTNESS,
+                ReadDomain.COLOUR_MODE,
+                ReadDomain.FIRMWARE,
+                ReadDomain.HARDWARE,
+                ReadDomain.SUBORDINATE_20,
+                ReadDomain.SUBORDINATE_21,
+                ReadDomain.PHYSICAL_IC_COUNT,
+                ReadDomain.SEGMENTS,
+            }
+        ),
+        setup_required_read_domains=frozenset(
+            {
+                ReadDomain.POWER,
+                ReadDomain.BRIGHTNESS,
+                ReadDomain.COLOUR_MODE,
+            }
+        ),
+        supports_rgb=True,
+        supports_color_temperature=True,
+        min_color_temp_kelvin=2700,
+        max_color_temp_kelvin=6500,
+        supports_custom_effects=True,
+        supports_scenes=True,
+        music_modes=(
+            "energetic",
+            "rhythm",
+            "spectrum",
+            "rolling",
+            "separation",
+            "hopping",
+            "piano_keys",
+            "fountain",
+            "day_and_night",
+            "bloom",
+            "shiny",
+            "splash",
+            "spring",
+            "meteor",
+            "ripple",
+            "orbit",
+        ),
+        music_variants=H61F5_MUSIC_VARIANTS,
+        music_upload_before_selector=True,
+        supports_music_color=True,
+        physical_ic_count=50,
+        ic_per_segment=5,
+        whole_device_mask=0x03FF,
+        segment_count=10,
+        segment_group_size=4,
+        supports_segment_writes=True,
+        supports_segment_brightness=True,
+        supports_segment_color_temperature=True,
+        scene_catalogue_sku="H61F5",
         effect_readback="diy_code_only",
         boolean_controls=frozenset({"gradual"}),
     ),

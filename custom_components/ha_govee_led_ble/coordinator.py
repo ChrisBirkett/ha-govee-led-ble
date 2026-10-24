@@ -7,6 +7,7 @@ from collections.abc import AsyncIterator, Awaitable, Callable, Mapping, Sequenc
 from contextlib import asynccontextmanager, nullcontext
 from dataclasses import replace
 from datetime import datetime, timedelta
+from math import ceil
 from typing import Any, cast
 
 from bleak import BleakClient, BleakError  # type: ignore[attr-defined]
@@ -1608,8 +1609,12 @@ class GoveeBLECoordinator(_DreamviewMixin, _ActiveModeMixin):
         self._segment_query_brightness = None
 
     def _apply_segment_group(self, generated: Any) -> tuple[str, ...]:
-        if self.profile.configured_string_counts and (
-            not self._configured_strings_confirmed or self._segment_query_generation != self._profile_generation
+        if (
+            self.profile.configured_string_counts
+            and (not self._configured_strings_confirmed or self._segment_query_generation != self._profile_generation)
+        ) or (
+            self.profile.ic_per_segment is not None
+            and self._segment_query_generation not in (None, self._profile_generation)
         ):
             raise ValueError("segment page has no current configured layout")
         group = getattr(generated.body, "group", None)
@@ -1620,6 +1625,15 @@ class GoveeBLECoordinator(_DreamviewMixin, _ActiveModeMixin):
             raise ValueError("invalid segment group for model")
         offset = (group - 1) * group_size
         expected_count = min(group_size, self.profile.segment_count - offset)
+        if (
+            type(count) is int
+            and isinstance(records, list)
+            and len(records) == count
+            and expected_count < count <= group_size
+            and self.profile.segment_count < get_profile(self.model).segment_count
+        ):
+            records = records[:expected_count]
+            count = expected_count
         if type(count) is not int or count != expected_count or not isinstance(records, list) or len(records) != count:
             raise ValueError("segment record count does not match model page")
         # Convert the entire page before touching an in-progress observation.
@@ -2277,7 +2291,30 @@ class GoveeBLECoordinator(_DreamviewMixin, _ActiveModeMixin):
                     if self._client is not None and self._client.is_connected:
                         self._physical_ic_count_confirmed = True
                     if self.profile.physical_ic_count != count:
-                        self.profile = replace(self.profile, physical_ic_count=count)
+                        if self.profile.ic_per_segment is not None:
+                            segments = min(
+                                get_profile(self.model).segment_count,
+                                max(1, ceil(count / self.profile.ic_per_segment)),
+                            )
+                            self.profile = replace(
+                                self.profile,
+                                physical_ic_count=count,
+                                segment_count=segments,
+                                whole_device_mask=(1 << segments) - 1,
+                            )
+                            if len(self.segment_colors) != segments:
+                                self._profile_generation += 1
+                                self._segment_query_generation = None
+                                self._expected_state.clear()
+                                self.segment_colors = [(255, 255, 255)] * segments
+                                self.segment_brightness = [100] * segments
+                                self.segment_state_source = "initial"
+                                self.segment_state_observed_at = None
+                                self.segment_brightness_readable = False
+                                self._segment_groups_observed.clear()
+                                self._segment_query_colors = self._segment_query_brightness = None
+                        else:
+                            self.profile = replace(self.profile, physical_ic_count=count)
                     for variant in self.profile.music_variants:
                         for spec in music_body_params_for_mode(variant.mode_code, self.profile):
                             if spec.key not in self._initialized_music_parameters:

@@ -54,6 +54,7 @@ COMPANION_MUSIC_LAYOUTS = frozenset(
         "h6099_music_parameters",
         "h66a0_music_parameters",
         "h1a42_music_parameters",
+        "h61f5_music_parameters",
         "h7025_music_body",
     }
 )
@@ -476,6 +477,86 @@ H1A42_MUSIC_VARIANTS = (
     ),
 )
 
+# Android 7.6.01 h61d3/adjustNew/music/MusicModeNewH61F6, goods 261 + issue #392 hardware sweep.
+H61F5_MUSIC_VARIANTS = (
+    *(
+        replace(
+            variant,
+            evidence=(
+                "H61F5 MusicModeNewH61F6.d Energetic legacy selector"
+                if variant.mode_code == 5
+                else variant.evidence.replace("H6099 MusicMode", "H61F5 MusicModeNewH61F6")
+            ),
+            layout="h61f5_music_parameters" if variant.layout == "h6099_music_parameters" else variant.layout,
+        )
+        for variant in H6099_MUSIC_VARIANTS
+        if variant.mode_code in (3, 4, 5, 6, 0x30, 0x31, 0x32, 0x33, 0x34, 0x35)
+    ),
+    MusicVariant(
+        0x37,
+        "H61F5 MusicModeNewH61F6.d case 55 / RgbicMusicZhouYe",
+        "h61f5_music_parameters",
+        bytes.fromhex("37" + _H6099_PALETTE + "071400"),
+        (
+            MusicParamSpec(
+                "music_daynight_segments",
+                "segment_count",
+                "piece_count",
+                "number",
+                7,
+                1,
+                10,
+                requires_physical_ic_count=True,
+            ),
+            MusicParamSpec("music_daynight_speed", "speed", "speed", "number", 20, 1, 50),
+            MusicParamSpec("music_daynight_gradient", "gradient", "gradient", "switch", False),
+        ),
+        requires_physical_ic_count=True,
+        palette_bounds=(1, 8),
+        supports_fixed_colour=False,
+    ),
+    MusicVariant(
+        0x84,
+        "H61F5 MusicModeNewH61F6.d / SubMusicModeConfig.makeShuiHua",
+        "h61f5_music_parameters",
+        bytes.fromhex("84" + _H6099_PALETTE),
+        palette_bounds=(1, 8),
+        supports_fixed_colour=False,
+    ),
+    MusicVariant(
+        0x85,
+        "H61F5 MusicModeNewH61F6.d / SubMusicModeConfig.makeTanHuang",
+        "h61f5_music_parameters",
+        bytes.fromhex("85" + _H6099_PALETTE),
+        palette_bounds=(2, 8),
+        supports_fixed_colour=False,
+    ),
+    MusicVariant(
+        0x8B,
+        "H61F5 MusicModeNewH61F6.d / SubMusicModeConfig.makeLiuYing",
+        "h61f5_music_parameters",
+        bytes.fromhex("8b" + _H6099_PALETTE),
+        palette_bounds=(4, 8),
+        supports_fixed_colour=False,
+    ),
+    MusicVariant(
+        0x92,
+        "H61F5 MusicModeNewH61F6.d / SubMusicModeConfig.makeFeiDieUFO",
+        "h61f5_music_parameters",
+        bytes.fromhex("92" + _H6099_PALETTE),
+        palette_bounds=(1, 8),
+        supports_fixed_colour=False,
+    ),
+    MusicVariant(
+        0xA3,
+        "H61F5 MusicModeNewH61F6.d / SubMusicModeConfig.makeYouDong",
+        "h61f5_music_parameters",
+        bytes.fromhex("a3" + _H6099_PALETTE),
+        palette_bounds=(1, 8),
+        supports_fixed_colour=False,
+    ),
+)
+
 # RGBIC AcNewDetail MusicMode.d shares these named palette/tail encodings;
 # its Day/Night indices and Piano defaults differ from H6099 and are explicit.
 H6102_MUSIC_VARIANTS = (
@@ -777,7 +858,7 @@ def music_variant(profile: ModelProfile, mode_code: int) -> MusicVariant | None:
         and mode_code == 0x34
         and ic is not None
         and (
-            variant.layout in {"h6099_music_parameters", "h66a0_music_parameters"}
+            variant.layout in {"h6099_music_parameters", "h66a0_music_parameters", "h61f5_music_parameters"}
             or any(spec.requires_physical_ic_count for spec in variant.parameters)
         )
     ):
@@ -799,17 +880,22 @@ def music_variant(profile: ModelProfile, mode_code: int) -> MusicVariant | None:
     if (
         variant
         and mode_code == 0x37
-        and variant.layout in {"h6099_music_parameters", "h66a0_music_parameters"}
+        and variant.layout in {"h6099_music_parameters", "h66a0_music_parameters", "h61f5_music_parameters"}
         and variant.parameters
         and ic is not None
     ):
-        max_value = ic // 2 if ic < 30 else ceil(ic / 5)
-        default = ic // 2 if ic < 30 else ceil(ic * 7 / 50)
+        max_value = max(1, ic // 2) if ic < 30 else ceil(ic / 5)
+        default = max(1, ic // 2) if ic < 30 else ceil(ic * 7 / 50)
+        speed_default = 10 if ic < 30 else 20
         variant = replace(
             variant,
             parameters=(
                 replace(variant.parameters[0], default=min(max_value, default), max_value=max_value),
-                *variant.parameters[1:],
+                *(
+                    (replace(variant.parameters[1], default=speed_default), *variant.parameters[2:])
+                    if len(variant.parameters) > 1
+                    else variant.parameters[1:]
+                ),
             ),
         )
     if (

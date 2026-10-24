@@ -617,6 +617,15 @@ H1A42_DIY_FAMILIES: Final = tuple(
     )
 )
 
+# Android 7.6.01 h61d3/adjustNew/diy/H61F6DiyConfig, goods 261.
+H61F5_DIY_FAMILIES: Final = tuple(
+    replace(
+        family,
+        source_reference="Android 7.6.01 H61F6DiyConfig.getBasicEffectList/getMixEffectList",
+    )
+    for family in H1A42_DIY_FAMILIES
+)
+
 H7020_DIY_FAMILIES: Final = (
     DiyEffectFamily(
         "fade",
@@ -1555,6 +1564,40 @@ MODEL_EFFECT_CATALOGUES: Final = {
             multi=studio_apply_capability_state("H1A42", CapabilityWorkflow.MULTI),
             palette_diy=studio_apply_capability_state("H1A42", CapabilityWorkflow.PALETTE_DIY),
             workshop=studio_apply_capability_state("H1A42", CapabilityWorkflow.WORKSHOP),
+        ),
+    ),
+    "H61F5": ModelEffectCatalogue(
+        sku="H61F5",
+        painted_addressing="physical_ic",
+        painted_effects=tuple(
+            {"id": name, "label": name.replace("_", " ").capitalize()}
+            for name in ("clockwise", "counter_clockwise", "cycle", "gradient", "twinkle", "breathe")
+        ),
+        effects=H61F5_DIY_FAMILIES,
+        music_modes=_native_music_modes("H61F5"),
+        video_modes=(),
+        templates=(
+            CatalogueTemplate(
+                "template:paint",
+                "Graffiti",
+                "single-layer",
+                PaintedEffect("clockwise", 50, 100, (None,), addressing="physical_ic"),
+            ),
+            *(_single_template("H61F5", family) for family in H61F5_DIY_FAMILIES),
+            *(_music_template("H61F5", mode) for mode in _native_music_modes("H61F5")),
+        ),
+        workshop_templates=(),
+        supports=CatalogueSupport(
+            multi=workflow_capability_state("H61F5", CapabilityWorkflow.MULTI),
+            advanced=workflow_capability_state("H61F5", CapabilityWorkflow.ADVANCED),
+            workshop=workflow_capability_state("H61F5", CapabilityWorkflow.WORKSHOP),
+        ),
+        apply=ApplySupport(
+            painted=studio_apply_capability_state("H61F5", CapabilityWorkflow.PAINTED),
+            single=studio_apply_capability_state("H61F5", CapabilityWorkflow.SINGLE),
+            multi=studio_apply_capability_state("H61F5", CapabilityWorkflow.MULTI),
+            palette_diy=studio_apply_capability_state("H61F5", CapabilityWorkflow.PALETTE_DIY),
+            workshop=studio_apply_capability_state("H61F5", CapabilityWorkflow.WORKSHOP),
         ),
     ),
     "H6125": ModelEffectCatalogue(

@@ -409,6 +409,30 @@
         },
         {
             "local_name": "H1A42_*"
+        },
+        {
+            "local_name": "ihoment_H61F5*"
+        },
+        {
+            "local_name": "Govee_H61F5*"
+        },
+        {
+            "local_name": "Minger_H61F5*"
+        },
+        {
+            "local_name": "GBK_H61F5*"
+        },
+        {
+            "local_name": "GVH_H61F5*"
+        },
+        {
+            "local_name": "GVH61F5*"
+        },
+        {
+            "local_name": "GV61F5*"
+        },
+        {
+            "local_name": "H61F5_*"
         }
     ],
     "codeowners": [

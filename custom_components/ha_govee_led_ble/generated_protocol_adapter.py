@@ -231,6 +231,12 @@ H1a42MusicWrite = cast(
 H1a42StatusReply = cast(
     Any, import_module("custom_components.ha_govee_led_ble.generated_protocol.h1a42_status_reply").H1a42StatusReply
 )
+H61f5MusicWrite = cast(
+    Any, import_module("custom_components.ha_govee_led_ble.generated_protocol.h61f5_music_write").H61f5MusicWrite
+)
+H61f5StatusReply = cast(
+    Any, import_module("custom_components.ha_govee_led_ble.generated_protocol.h61f5_status_reply").H61f5StatusReply
+)
 H7025StatusReply = cast(
     Any, import_module("custom_components.ha_govee_led_ble.generated_protocol.h7025_status_reply").H7025StatusReply
 )
@@ -396,6 +402,7 @@ _STATUS_ROOTS = {
     "H6099": ("h6099_status_reply", H6099StatusReply),
     "H66A0": ("h66a0_status_reply", H66a0StatusReply),
     "H1A42": ("h1a42_status_reply", H1a42StatusReply),
+    "H61F5": ("h61f5_status_reply", H61f5StatusReply),
     "H617A": ("status_reply", StatusReply),
     "H617C": ("h617c_status_reply", H617cStatusReply),
     "H7025": ("h7025_status_reply", H7025StatusReply),
@@ -424,6 +431,7 @@ _MUSIC_WRITE_ROOTS = {
     "H6076": ("h6076_music_write", H6076MusicWrite),
     "H66A0": ("h66a0_music_write", H66a0MusicWrite),
     "H1A42": ("h1a42_music_write", H1a42MusicWrite),
+    "H61F5": ("h61f5_music_write", H61f5MusicWrite),
     "H7025": ("h7025_music_write", H7025MusicWrite),
 }
 _COMMAND_ACK_ROOTS = {
@@ -2510,21 +2518,27 @@ def build_music_mode(
         multi.sub_body = selector
         root.body = multi
         return _serialize_xor(root)
-    if resolved in {"H1A42", "H66A0", "H7025"}:
+    if resolved in {"H1A42", "H61F5", "H66A0", "H7025"}:
         root_cls = (
-            H1a42MusicWrite if resolved == "H1A42" else H66a0MusicWrite if resolved == "H66A0" else H7025MusicWrite
+            H1a42MusicWrite
+            if resolved == "H1A42"
+            else H61f5MusicWrite
+            if resolved == "H61F5"
+            else H66a0MusicWrite
+            if resolved == "H66A0"
+            else H7025MusicWrite
         )
         root = root_cls()
         root.header, root.opcode, root.sub = b"\x33", b"\x05", b"\x13"
         selector = _child(root_cls.MusicSelector, root)
         selector.mode_id = root_cls.MusicMode(mode_id)
-        selector.sensitivity = max(0, min(100, sensitivity)) if resolved in {"H1A42", "H66A0"} else sensitivity
+        selector.sensitivity = max(0, min(100, sensitivity)) if resolved in {"H1A42", "H61F5", "H66A0"} else sensitivity
         if selector.is_legacy:
             selector.style = int(calm)
             selector.has_fixed_colour = int(colour is not None)
             if colour is not None:
                 selector.rgb = _rgb(selector, *colour)
-        elif resolved in {"H1A42", "H66A0"} and colour is not None:
+        elif resolved in {"H1A42", "H61F5", "H66A0"} and colour is not None:
             raise ValueError(f"new {resolved} music selectors omit fixed colour")
         selector.unknown_tail = bytes(14 - (2 + (3 if colour is not None else 0) if selector.is_legacy else 0))
         root.selector = selector
@@ -2791,9 +2805,18 @@ def parse_music_parameters(variant: MusicVariant, body: bytes) -> Any:
     """Validate a complete retained body with the selected KSY, independent of authoring bounds."""
     if not isinstance(body, bytes) or not body or len(body) > 255 * 17 - 3:
         raise ValueError("invalid music body length")
-    if variant.layout in {"h6099_music_parameters", "h66a0_music_parameters", "h1a42_music_parameters"}:
+    if variant.layout in {
+        "h6099_music_parameters",
+        "h66a0_music_parameters",
+        "h1a42_music_parameters",
+        "h61f5_music_parameters",
+    }:
         root_type = (
             import_module(
+                "custom_components.ha_govee_led_ble.generated_protocol.h61f5_music_parameters"
+            ).H61f5MusicParameters
+            if variant.layout == "h61f5_music_parameters"
+            else import_module(
                 "custom_components.ha_govee_led_ble.generated_protocol.h1a42_music_parameters"
             ).H1a42MusicParameters
             if variant.layout == "h1a42_music_parameters"
@@ -2831,7 +2854,12 @@ def encode_music_parameters(
     preserve_companions: bool = False,
 ) -> bytes:
     """Edit named Kaitai fields; palette length never becomes an absolute tail offset."""
-    if variant.layout in {"h6099_music_parameters", "h66a0_music_parameters", "h1a42_music_parameters"}:
+    if variant.layout in {
+        "h6099_music_parameters",
+        "h66a0_music_parameters",
+        "h1a42_music_parameters",
+        "h61f5_music_parameters",
+    }:
         return _encode_h6099_music_parameters(
             variant, parameters, palette, calm, physical_ic_count, preserve_companions
         )
@@ -2928,6 +2956,10 @@ def _encode_h6099_music_parameters(
 
     root_type = (
         import_module(
+            "custom_components.ha_govee_led_ble.generated_protocol.h61f5_music_parameters"
+        ).H61f5MusicParameters
+        if variant.layout == "h61f5_music_parameters"
+        else import_module(
             "custom_components.ha_govee_led_ble.generated_protocol.h1a42_music_parameters"
         ).H1a42MusicParameters
         if variant.layout == "h1a42_music_parameters"
@@ -2997,8 +3029,11 @@ def _encode_h6099_music_parameters(
                 # MusicMode.d uses default subEffect[0] (piece) as speed and [1] (10/20) as fade.
                 tail.speed = max(1, min(50, tail.piece_count))
                 tail.gradient = 0
-            elif "segment_count" not in parameters:
-                tail.piece_count = max(1, ic // 2) if ic < 30 else ceil(ic * 7 / 50)
+            else:
+                if "segment_count" not in parameters:
+                    tail.piece_count = max(1, ic // 2) if ic < 30 else ceil(ic * 7 / 50)
+                if "speed" not in parameters:
+                    tail.speed = 10 if ic < 30 else 20
     if any(
         type(value) is int and not 0 <= value <= 255 for key, value in vars(tail).items() if not key.startswith("_")
     ):

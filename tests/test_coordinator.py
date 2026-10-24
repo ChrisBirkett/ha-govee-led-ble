@@ -4697,7 +4697,7 @@ async def test_h66a0_setup_survives_identity_replies_inside_the_refresh(hass, mo
     assert coordinator.segment_state_source == "observed"
 
 
-@pytest.mark.parametrize("model", ["H66A0", "H1A42"])
+@pytest.mark.parametrize("model", ["H66A0", "H1A42", "H61F5"])
 @pytest.mark.parametrize(
     ("reply", "expected"),
     [("15000bb8", {"expected_color_temp_kelvin": 3000}), ("15000000", {"expected_zero_kelvin": True})],

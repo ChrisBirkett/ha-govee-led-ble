@@ -125,6 +125,37 @@ def test_h1a42_exact_status_root_covers_declared_reads_and_wide_kelvin():
     assert build_color_temp(10000, "H1A42")[7:9] == (10000).to_bytes(2, "big")
 
 
+async def test_h61f5_cut_strip_narrows_segments_from_aa40(hass):
+    from custom_components.ha_govee_led_ble.coordinator import GoveeBLECoordinator
+
+    coordinator = GoveeBLECoordinator(hass, "AA:BB:CC:DD:EE:FF", "H61F5", configuration_url=None)
+    assert coordinator.profile.physical_ic_count == 50
+    assert coordinator.profile.segment_count == 10
+    assert coordinator.profile.whole_device_mask == 0x03FF
+    coordinator.segment_state_source = "observed"
+    coordinator.segment_state_observed_at = "2026-10-21T00:00:00+00:00"
+    coordinator.segment_brightness_readable = True
+    initial_gen = coordinator._profile_generation
+    coordinator._notify_callback(None, bytearray(_h6179_status(0x40, b"\x00\x15")))
+    assert coordinator.profile.physical_ic_count == 21
+    assert coordinator.profile.segment_count == 5
+    assert coordinator.profile.whole_device_mask == 0x001F
+    assert coordinator._profile_generation == initial_gen + 1
+    assert coordinator.segment_state_source == "initial"
+    assert coordinator.segment_state_observed_at is None
+    assert not coordinator.segment_brightness_readable
+    assert len(coordinator.segment_colors) == 5
+    coordinator._notify_callback(None, bytearray(_h6179_status(0xA5, H("0164ff00006400ff00640000ff64ffffff"))))
+    coordinator._notify_callback(None, bytearray(_h6179_status(0xA5, H("0264808080000000000000000000000000"))))
+    assert coordinator.segment_state_source == "observed"
+    assert len(coordinator.segment_colors) == 5
+    assert coordinator.segment_colors[-1] == (0x80, 0x80, 0x80)
+    # Repeated AA 40 with the same 5-segment geometry preserves observed segment colours.
+    coordinator._notify_callback(None, bytearray(_h6179_status(0x40, b"\x00\x15")))
+    assert coordinator.segment_state_source == "observed"
+    assert coordinator.segment_colors[-1] == (0x80, 0x80, 0x80)
+
+
 def test_status_envelope_rejects_invalid_frames() -> None:
     assert decode_status_frame(b"") is None
     assert decode_status_frame(H("3301010000000000000000000000000000000033")) is None

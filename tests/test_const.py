@@ -126,7 +126,7 @@ def test_support_quality_has_only_supported_and_experimental_states():
     } == {"H601C", "H6076", "H60A1", "H60A6", "H6102", "H617A", "H617C", "H617E", "H617F", "H6199", "H7020"}
     assert {
         model for model, profile in MODEL_PROFILES.items() if profile.support_quality is SupportQuality.EXPERIMENTAL
-    } == {"H1A42", "H6099", "H6125", "H6179", "H66A0", "H7025"}
+    } == {"H1A42", "H6099", "H6125", "H6179", "H61F5", "H66A0", "H7025"}
 
 
 def test_h6125_is_an_exact_experimental_profile_on_the_shared_dreamcolor_route():
