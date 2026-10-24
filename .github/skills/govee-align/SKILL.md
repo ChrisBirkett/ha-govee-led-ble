@@ -23,7 +23,10 @@ Take `<MODEL>` (an exact SKU such as `H6076`, `H6125`, `H7020`, `H7025`, `H60A1`
   ```
   Read `$ref_dir/README.md` first and follow its confidentiality rules, lookups, entry points, and **LSP activation** workflow.
 - **Efficiency rules:**
-  - **Local first:** Exhaust `$ref_dir`, repository `.ksy`/`const.py`/`scene_catalogues/<MODEL>.json`, and GitHub issue/PR history before any `web_search` or `web_fetch`.  Call `web_search` at most once and only when a physical specification remains unresolved locally.
+  - **Decision-led, local-first research:** Start with local reference material, repository code and issue/PR evidence.
+    Reuse cited findings after checking relevant checkout, source-version and owner-context changes.
+    Stop deepening settled traces; record the specific missing evidence and next discriminating check for unresolved decisions.
+    Use targeted authoritative public/upstream sources for remaining questions, including transport failures, under the reference confidentiality rules.
   - **Batch searches and file slices:** `grep` for target functions/constants first, then read all needed `view_range` slices across files in one parallel turn rather than paging one slice per turn.
   - **No duplicate reads:** Do not call `lsp` `documentSymbol` and full-file `view` on the same small file in one turn; use `documentSymbol` on large files to locate `view_range` targets or to link files before `goToDefinition`/`findReferences`.
   - **Fast JSON/ZIP reads:** Use `python3 -c` (not `uv run python -c`) for stdlib JSON/ZIP inspection so fresh worktrees do not trigger a full `.venv` sync.
@@ -32,21 +35,31 @@ Take `<MODEL>` (an exact SKU such as `H6076`, `H6125`, `H7020`, `H7025`, `H60A1`
 
 ## 1. Research hardware reality and lookup `<MODEL>`
 
+Maintain a concise, revisable inventory of the full in-scope feature and revision surface, including paths not currently exposed.
+Prioritise unresolved decisions and the reported failure's causal path without reducing coverage.
+Add newly discovered routes and retain unresolved or deferred findings; locating the failing stage does not establish its cause.
+
 1. **Reference and repository lookup:** Follow `$ref_dir/README.md` and inspect existing `.ksy`, `const.py`, `scene_catalogues/<MODEL>.json`, and GitHub issue/PR context for `<MODEL>`'s product/type ID, IC/segment geometry, dynamic type-ID remapping, hardware-version family parsers, BLE local-name prefixes, and encryption eligibility.
 2. **Physical device and public evidence:** Cross-check hardware geometry, dedicated white emitters, power limits, owner diagnostics, and independent third-party captures (excluding self-referential repository hits).
 3. **Hardware/revision matrix:** Map `(pact_type, pact_code, hardware, firmware, subordinate_20/21)` to each capability independently.  Separate baseline capabilities safe from Pact alone (so setup and writes work if version queries time out) from capabilities requiring confirmed HW/FW versions.  Treat reference code as candidate routing, not hardware proof; flag where physical firmware diverges (unanswered queries, masked-write side effects, out-of-range stored registers).
 
 ## 2. Trace feature surfaces end to end
 
-For each reachable feature (`revision gate -> bounds/defaults -> byte producer -> framing/ACK -> reply parser -> retained state`), compare reference behaviour against the repository:
+For each in-scope feature, trace revision admission, bounds/defaults, producer/body, framing/transport, activation, acknowledgements, observations and recovery.
+Catalogue type, body family and wire subtype are independent routing decisions.
+Establish upload-ACK behaviour separately from status readback; status-query silence does not imply either ACK policy.
+The headings and identifiers below are non-exhaustive lookup anchors, not the limits of the investigation.  Keep exact wire rules in Kaitai and attributable session evidence.
 
-- **Power & brightness:** `33 01`/`AA 01`; percentage `1..100` vs register `brightness_wire_range` (`(6, 254)` or `(20, 254)`), clamping non-zero readback bytes (`1..255`) into `[low, high]`.
-- **Static RGB & Kelvin:** Selector (`0x15` subop `0x01`/`0x02` vs legacy `0x0b`/`0x0d`/direct RGB), Kelvin bounds, `kelvin_direct_rgb` (`(0, 0, 0)` vs `(255, 255, 255)`), companion RGB (`table_kelvin_rgb` vs formula), and whole-device vs per-segment Kelvin.
-- **Geometry & segments:** `segment_count`, `whole_device_mask` width (2-byte vs 4-byte), configurable strings (`33 0F`/`AA 0F` with fresh readback confirmation), and segment readback (`AA A5` `govee_segment_page` vs `AA A2` RGB-only `govee_rgb_segment_page`, `segment_group_size`, `segment_colour_mode_ambiguous`).
-- **Scenes:** Exact-SKU `scene_catalogues/<MODEL>.json`, selector `33 05 04` (1-byte vs 2-byte LE, `selector_only_scene_bits`, `scene_codes`), type-0 selector vs type-1/type-2 (`A3 02` upload + `0x04`), speed metadata (`_SPEED_METADATA_SKUS`, `_METADATA_DEFAULT_SPEED_SKUS`), and `local_scenes`.
-- **Music:** Selector (`0x0c`, `0x0f`, `0x11`, `0x12`, `0x13`, or `0x05`), mode IDs, sensitivity bounds, style/direction/group/key fields, fixed colour, and `A3 41` companion upload (`music_upload_before_selector`, `music_requires_upload_ack`, `music_retry_after_upload`, `music_params_require_activation`).
-- **DIY & Workshop:** Transport/body (`A1 02` `DiyType04` with `a1_diy_selector=0xFE`, `A3 04` `DiyType04`/mixed, `A3 02` `SceneBody` layered templates, `DiyType03`, or `WorkshopBody`), family/variation allowlists, rate/palette bounds, `diy_requires_upload_ack`, `diy_slot_policy`, and `effect_readback`.
-- **Settings, video & DreamView:** Boolean controls (`0x0e` `limit`, `0x14`/`0xa3` `gradual`, `0x41` `power_off_memory` V1 boolean vs V2 3-state), camera/video registers and subordinate `20`/`21` gates, and DreamView (`dreamview_max_sub_devices`, operations/reads).
+- **Power & brightness:** Input versus register bounds (`brightness_wire_range`), conversion, clamping and non-zero readback handling.
+- **Static RGB & Kelvin:** Selector, Kelvin bounds, direct and companion RGB (`kelvin_direct_rgb`, `table_kelvin_rgb`), and whole-device versus per-segment behaviour.
+- **Geometry & segments:** Physical, installed and logical counts; `segment_count`, mask width, grouping and readback ambiguity.
+  Confirm configurable geometry through fresh readback before constructing masked writes.
+- **Scenes:** Exact-SKU catalogue, selector width/eligibility (`scene_codes`, `selector_only_scene_bits`, `local_scenes`), body routing, upload versus selector-only activation,
+  and exact-model speed metadata/defaults.
+- **Music:** Exact selectors/mode IDs, sensitivity and style/direction/group/key bounds, fixed colour, companion bodies, upload ordering, ACKs, retries and parameter activation.
+- **DIY & Workshop:** Body/transport, family/variation allowlists, rate/palette/layer bounds, upload ACKs, slot safety (`diy_slot_policy`) and restoration (`effect_readback`).
+- **Settings, video & DreamView:** Exact control eligibility, boolean versus enum values, query/write semantics, subordinate-version gates and group capacity
+  (`dreamview_max_sub_devices`).
 
 ## 3. Audit Kaitai ownership and neighbouring code
 
@@ -63,7 +76,12 @@ Kaitai Struct (`.ksy`) is the single source of wire truth.  Audit `<MODEL>` and 
    - Implementation: run `make protocol verify-protocol`, add every distinct `device_profile()` outcome to `_QUALIFIED_CONTEXTS` in `tests/test_profile_wire_invariants.py`, add direct-byte frames to `tests/test_kaitai_protocol.py`, regenerate fixtures if needed, and pass `make check`.
 2. **Review with another agent:** Run a `code-review` or `rubber-duck` subagent (`gpt-6-astra`) to challenge the hardware/revision findings, Kaitai boundaries, and neighbouring refactoring opportunities.  Pass exact file/line citations and instruct the reviewer not to re-invoke `govee-align` or repeat full reference discovery.
 3. **Respond and plan clearly:**
-   - **If aligned:** Return a short confirmation only (checked surfaces and passing checks).
-   - **If misaligned or incomplete:** Return a concise numbered list of gaps in chat, and write the full AI-actionable specification (evidence ledger, exact wire frames, `.ksy` schema changes, `ModelProfile`/`device_profile()` updates, and neighbouring code improvements) to `<session_folder>/files/align-<model>.md`.
+   - **If aligned:** Return a short confirmation of coverage and only checks actually performed.  Unfinished coverage is not aligned.
+   - **If gaps or uncertainty remain:** Report confirmed gaps alongside unresolved conclusions and unexamined scope.
+     Distinguish unexamined, investigated-but-unresolved and not-hardware-qualified; absent owner qualification alone does not withhold defensible candidates.
+     Keep evidence, attributable frames, affected schema/profile/runtime paths and intended checks in `<session_folder>/files/align-<model>.md`.
+     Identify the next discriminating evidence for unresolved conclusions instead of prescribing unsupported fixes.
+   - **Consistent handoff:** Keep one current decision per capability/revision context, or mark it unresolved.
+     Reconcile changed decisions across the specification, any plan and intended tests before implementing the affected path.
+     Retain contrary evidence, reasons for supersession and deferred findings without leaving competing current instructions.
    - **When planning an implementation:** Include the four-section `CONTRIBUTING.md` plan and the complete delivery handoff: independent code review, `make check`, draft PR/comment approval, opening a PR linked to the issue (`Fixes #<issue>`, exact SKU label), passing CI, and rebase-merging to `master`.
-
