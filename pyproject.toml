@@ -16,13 +16,9 @@ dev = [
     "aiousbwatcher>=1.1.1",
     "bleak-esphome==4.1.0",
     "mypy>=1.15",
-    # Drags in homeassistant, which pins Pillow and uv to exact versions. Those pins are
-    # currently behind upstream security releases, which is where their open advisories come
-    # from. Do NOT add a uv override to force them forward: the point of this dependency is to
-    # test against what Home Assistant actually ships, and overriding them tests something
-    # nobody runs. Both are test-only here and never ship with the integration. Wait for
-    # upstream.
-    "pytest-homeassistant-custom-component>=0.13.316",
+    # Home Assistant pins Pillow below its security fixes. Do not override that pin: tests
+    # must match what HA ships. Pillow is test-only here and never bundled with the integration.
+    "pytest-homeassistant-custom-component>=0.13.374",
     "pytest-cov>=7.1",
     "pytest-xdist>=3.8",
     "ruff>=0.9",
