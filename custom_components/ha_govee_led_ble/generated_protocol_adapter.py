@@ -891,6 +891,10 @@ def require_profile_packet(frame: bytes, profile: ModelProfile) -> None:
             if boolean_control_is_authorized(control, profile):
                 return
             raise ValueError(f"{profile.name} does not support boolean control {control}")
+        if domain == "physical_ic_count":
+            if profile.can_read(ReadDomain.PHYSICAL_IC_COUNT):
+                return
+            raise ValueError(f"{profile.name} does not support physical IC count readback")
         if profile.command_operations is None or domain in profile.read_domains:
             return
     upload = _parse_xor_frame(frame, "A3", {"A3": ("command_write.upload_frame", CommandWrite.UploadFrame)}).parsed
@@ -1273,10 +1277,11 @@ def build_configured_strings(count: int, profile: ModelProfile) -> bytes:
     return _serialize_xor(root)
 
 
-def build_physical_ic_count_query(model: str) -> bytes:
-    if get_profile(model).command_grammar != "H6099":
+def build_physical_ic_count_query(model: str, *, profile: ModelProfile | None = None) -> bytes:
+    profile = profile or get_profile(model)
+    if not profile.can_read(ReadDomain.PHYSICAL_IC_COUNT) or profile.command_grammar is None:
         raise ValueError(f"{model} has no qualified physical IC query")
-    return _build_status_query("physical_ic_count", "H6099")
+    return _build_status_query("physical_ic_count", profile.command_grammar)
 
 
 INSTALLATION_DIRECTIONS = (2, 3, 4, 5)

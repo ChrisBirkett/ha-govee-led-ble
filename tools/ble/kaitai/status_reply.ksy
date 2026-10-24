@@ -28,6 +28,7 @@ seq:
         'aa_domain::fw_version': version_body
         'aa_domain::hw_version': hw_version_body
         'aa_domain::light_count': h617a_control_payload::light_count_body
+        'aa_domain::physical_ic_count': physical_ic_count_body
         'aa_domain::segments': govee_segment_page(15, 3, true)
         'aa_domain::multi_effect': multi_effect_body
   - id: checksum
@@ -40,6 +41,7 @@ enums:
     0x06: fw_version
     0x07: hw_version
     0x0f: light_count
+    0x40: physical_ic_count
     0xa3: multi_effect
     0xa5: segments
   color_mode:
@@ -48,6 +50,12 @@ enums:
     0x0a: diy
     0x13: music
 types:
+  physical_ic_count_body:
+    seq:
+      - id: count
+        type: s2be
+      - id: unknown_tail
+        size-eos: true
   multi_effect_body:
     doc: >
       Readback of the gradual-change boolean written by command_write opcode 0xa3. The

@@ -112,6 +112,7 @@ def test_identity_border_and_policy_wire(monkeypatch) -> None:
         "aa21312e30302e3131",
         "aa3002",
         "aa3201",
+        "aa400032",
         "aaa90b0101",
         "aaae0104646464640000",
         "aaa50164010203640102036401020364010203",

@@ -82,6 +82,7 @@ class ReadDomain(StrEnum):
     RELATIVE_BRIGHTNESS = "relative_brightness"
     SEGMENTS = "segments"
     CONFIGURED_STRINGS = "configured_strings"
+    PHYSICAL_IC_COUNT = "physical_ic_count"
     INSTALLATION_DIRECTION = "installation_direction"
     CAMERA_HEALTH = "camera_health"
     OTHER = "other"
@@ -93,6 +94,7 @@ _IDENTITY_READ_DOMAINS = frozenset(
         ReadDomain.HARDWARE,
         ReadDomain.SUBORDINATE_20,
         ReadDomain.SUBORDINATE_21,
+        ReadDomain.PHYSICAL_IC_COUNT,
     }
 )
 
@@ -276,6 +278,7 @@ class ModelProfile:
                 ReadDomain.HARDWARE,
                 ReadDomain.SEGMENTS,
                 ReadDomain.CONFIGURED_STRINGS,
+                ReadDomain.PHYSICAL_IC_COUNT,
                 ReadDomain.INSTALLATION_DIRECTION,
                 ReadDomain.CAMERA_HEALTH,
             }
@@ -656,6 +659,7 @@ MODEL_PROFILES: dict[str, ModelProfile] = {
                 ReadDomain.SUBORDINATE_21,
                 ReadDomain.RELATIVE_BRIGHTNESS,
                 ReadDomain.SEGMENTS,
+                ReadDomain.PHYSICAL_IC_COUNT,
                 ReadDomain.INSTALLATION_DIRECTION,
                 ReadDomain.CAMERA_HEALTH,
             }

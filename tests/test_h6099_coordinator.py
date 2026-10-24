@@ -8,7 +8,7 @@ from unittest.mock import ANY, AsyncMock, MagicMock
 import pytest
 from bleak import BleakError
 
-from custom_components.ha_govee_led_ble.const import get_profile
+from custom_components.ha_govee_led_ble.const import MODEL_PROFILES, get_profile
 from custom_components.ha_govee_led_ble.control_arbiter import ControlIntent, async_control_intent
 from custom_components.ha_govee_led_ble.coordinator import GoveeBLECoordinator
 from custom_components.ha_govee_led_ble.coordinator_status import ParsedMode
@@ -244,8 +244,54 @@ async def test_ic_discovery_is_device_scoped_and_only_initializes_new_defaults(d
     assert device.profile.physical_ic_count == 14
     device._clear_client_state(device._client)
     assert device.profile.physical_ic_count is None
+    assert device.physical_ic_count_source == "unknown"
     notify(device, "aa40003c")
     assert device.music_piano_key_count == 12 and device._field_revisions == {}
+    assert device.physical_ic_count_source == "observed"
+
+
+async def test_declared_product_ic_queries_installed_aa40_and_retains_cut_strip_count(hass, monkeypatch):
+    profile = replace(
+        get_profile("H6099"),
+        physical_ic_count=50,
+        profile_identity_fields=frozenset({"fw_version"}),
+    )
+    monkeypatch.setitem(MODEL_PROFILES, "H6099", profile)
+    device = GoveeBLECoordinator(hass, "11:22:33:44:55:66", "H6099", configuration_url="test")
+    device._client = MagicMock(is_connected=True, write_gatt_char=AsyncMock())
+    device.fw_version = device.hw_version = "1.00.00"
+    device.subordinate_20_version = device.subordinate_21_version = "1.00.00"
+    device._confirmed_identity_fields.update({"fw_version", "subordinate_21_version"})
+    assert device.profile.physical_ic_count == 50
+    assert device.physical_ic_count_source == "declared"
+
+    await device._send_identity_queries()
+    assert [call.args[1] for call in device._client.write_gatt_char.await_args_list] == [
+        build_physical_ic_count_query("H6099"),
+    ]
+    notify(device, "aa400015")
+    assert device.profile.physical_ic_count == 21
+    assert device.physical_ic_count_source == "observed"
+    assert device._physical_ic_count_confirmed
+
+    device._client.write_gatt_char.reset_mock()
+    await device._send_identity_queries()
+    assert device._client.write_gatt_char.await_args_list == []
+
+    device._resolve_device_profile()
+    assert device.profile.physical_ic_count == 21
+    device._clear_client_state(device._client)
+    assert device.profile.physical_ic_count == 21
+    assert device.physical_ic_count_source == "observed"
+    assert not device._physical_ic_count_confirmed
+    assert device.music_piano_key_count == 16
+    device._observed_physical_ic_count = None
+    assert device.physical_ic_count_source == "unknown"
+
+    h617a = GoveeBLECoordinator(hass, "11:22:33:44:55:77", "H617A", configuration_url=None)
+    notify(h617a, "aa400032")
+    assert h617a.profile.physical_ic_count is None
+    assert h617a.packet_log[-1]["reason"] == "unsupported_domain"
 
 
 @pytest.mark.parametrize("reply", ["aaa90b0101", "aa0101"])

@@ -29,6 +29,7 @@ seq:
         'query_domain::firmware': zero_body
         'query_domain::hardware': hardware_query_body
         'query_domain::light_count': zero_body
+        'query_domain::physical_ic_count': zero_body
         'query_domain::limit': zero_body
         'query_domain::multi_effect': zero_body
         'query_domain::segments': segment_query_body
@@ -44,6 +45,7 @@ enums:
     0x07: hardware
     0x0e: limit
     0x0f: light_count
+    0x40: physical_ic_count
     0xa3: multi_effect
     0xa5: segments
     0xa9: display_setting

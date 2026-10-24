@@ -35,6 +35,7 @@ _STATUS_DOMAIN_NAMES = {
     "relative_brightness": StatusDomain.RELATIVE_BRIGHTNESS,
     "segments": StatusDomain.SEGMENTS,
     "configured_strings": StatusDomain.CONFIGURED_STRINGS,
+    "physical_ic_count": StatusDomain.PHYSICAL_IC_COUNT,
     "installation_direction": StatusDomain.INSTALLATION_DIRECTION,
     "camera_health": StatusDomain.CAMERA_HEALTH,
 }
@@ -86,6 +87,8 @@ def status_is_authorized(decoded: ParsedStatusEnvelope, profile: ModelProfile) -
     control = boolean_control_name(getattr(decoded.generated.domain, "name", ""))
     if control is not None:
         return boolean_control_is_authorized(control, profile)
+    if decoded.domain is ReadDomain.PHYSICAL_IC_COUNT:
+        return profile.can_read(ReadDomain.PHYSICAL_IC_COUNT)
     return profile.command_operations is None or profile.can_read(decoded.domain)
 
 

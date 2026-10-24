@@ -316,6 +316,8 @@ def _status_frames_for_domain(domain: ReadDomain, model: str, profile: ModelProf
         return tuple(_segment_pages(profile))
     if domain is ReadDomain.CONFIGURED_STRINGS:
         return (_status(0x0F, b"\x01"),)
+    if domain is ReadDomain.PHYSICAL_IC_COUNT:
+        return (_status(0x40, b"\x00\x32"),)
     if domain is ReadDomain.INSTALLATION_DIRECTION:
         return (_status(0x30, b"\x02"),)
     if domain is ReadDomain.CAMERA_HEALTH:
@@ -450,6 +452,7 @@ def _query_builders(model: str, profile: ModelProfile) -> dict[ReadDomain, tuple
             for group in range(1, profile.segment_group_count + 1)
         ),
         ReadDomain.CONFIGURED_STRINGS: (lambda: a.build_configured_strings_query(profile),),
+        ReadDomain.PHYSICAL_IC_COUNT: (lambda: a.build_physical_ic_count_query(model, profile=profile),),
         ReadDomain.DISPLAY_SETTING: tuple(display_queries),
         ReadDomain.RELATIVE_BRIGHTNESS: (lambda: a.build_relative_brightness_query(model, profile=profile),),
         ReadDomain.INSTALLATION_DIRECTION: (lambda: a.build_installation_direction_query(model, profile=profile),),
@@ -510,9 +513,9 @@ def test_every_claimed_read_domain_is_consumed(hass, model: str, profile: ModelP
         assert coordinator._domain_revisions.get(domain, 0) > 0, (
             f"{model} ({profile.name}) did not record receipt for {domain.value}"
         )
-        assert coordinator._field_revisions, (
-            f"{model} ({profile.name}) parsed {domain.value} but observed no state fields"
-        )
+        assert coordinator._field_revisions or (
+            domain is ReadDomain.PHYSICAL_IC_COUNT and coordinator.profile.physical_ic_count == 50
+        ), f"{model} ({profile.name}) parsed {domain.value} but observed no state fields"
 
 
 @pytest.mark.parametrize(("model", "profile"), _SCALAR_WHITE_BALANCE_PROFILES)

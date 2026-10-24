@@ -258,6 +258,8 @@ class GoveeBLECoordinator(_DreamviewMixin, _ActiveModeMixin):
         self._connection_initializing = False
         self._notification_token: object | None = None
         self._confirmed_identity_fields: set[str] = set()
+        self._observed_physical_ic_count: int | None = None
+        self._physical_ic_count_confirmed = False
         self._authorization_generation = 0
         self._upload_ack: tuple[BleakClient, object | None, int, int, int | None, int, asyncio.Future[bool]] | None = (
             None
@@ -357,10 +359,13 @@ class GoveeBLECoordinator(_DreamviewMixin, _ActiveModeMixin):
         self.music_daynight_speed = 10
         self.music_daynight_gradient = False
         self._initialized_music_parameters: set[str] = set()
-        for variant in get_profile(model).music_variants:
-            for spec in music_body_params_for_mode(variant.mode_code, get_profile(model)):
+        for variant in profile.music_variants:
+            for spec in music_body_params_for_mode(variant.mode_code, profile):
                 setattr(self, spec.key, spec.default)
-                self._initialized_music_parameters.add(spec.key)
+                if not profile.can_read(ReadDomain.PHYSICAL_IC_COUNT) or not (
+                    variant.requires_physical_ic_count or spec.requires_physical_ic_count
+                ):
+                    self._initialized_music_parameters.add(spec.key)
             for spec in variant.selector_parameters:
                 setattr(self, spec.key, None)
         self.packet_log: list[dict[str, Any]] = []
@@ -1168,6 +1173,12 @@ class GoveeBLECoordinator(_DreamviewMixin, _ActiveModeMixin):
                 self.model, self.pact_type, self.pact_code, firmware=self.fw_version, hardware=self.hw_version
             )
             if (
+                self._observed_physical_ic_count is not None
+                and profile.can_read(ReadDomain.PHYSICAL_IC_COUNT)
+                and profile.physical_ic_count != self._observed_physical_ic_count
+            ):
+                profile = replace(profile, physical_ic_count=self._observed_physical_ic_count)
+            elif (
                 profile is get_profile(self.model)
                 and profile.physical_ic_count is None
                 and self.profile.physical_ic_count is not None
@@ -1329,13 +1340,15 @@ class GoveeBLECoordinator(_DreamviewMixin, _ActiveModeMixin):
             _LOGGER.debug("Reconnecting stale notification stream for %s", self.address)
         # Cached identity remains presentation data; only current-connection confirmation is revoked.
         self._confirmed_identity_fields.clear()
+        self._physical_ic_count_confirmed = False
         self._authorization_generation += 1
         self._music_palette = self._music_body = None
         self.video_parameters = None
         if self.model == "H6102":
             self.profile = replace(self.profile, physical_ic_count=None)
         self._configured_strings_confirmed = False
-        if self.profile.command_grammar == "H6099":
+        if self.profile.can_read(ReadDomain.PHYSICAL_IC_COUNT) and get_profile(self.model).physical_ic_count is None:
+            self._observed_physical_ic_count = None
             self.profile = replace(self.profile, physical_ic_count=None)
         if self._client and self._client.is_connected:
             await self._disconnect_locked()
@@ -1495,7 +1508,9 @@ class GoveeBLECoordinator(_DreamviewMixin, _ActiveModeMixin):
             self.camera_status = "unknown"
             self.boolean_control_state.clear()
             self.power_on_behaviour = None
-        if self.profile.command_grammar == "H6099":
+        self._physical_ic_count_confirmed = False
+        if self.profile.can_read(ReadDomain.PHYSICAL_IC_COUNT) and get_profile(self.model).physical_ic_count is None:
+            self._observed_physical_ic_count = None
             self.profile = replace(self.profile, physical_ic_count=None)
         self._stop_keep_alive()
         self._disconnect_generation += 1
@@ -2248,16 +2263,18 @@ class GoveeBLECoordinator(_DreamviewMixin, _ActiveModeMixin):
                 for field, control_value in control_values.items():
                     setattr(self, field, control_value)
                 observed = tuple(control_values)
-            elif (count := parse_physical_ic_count(generated)) is not None:
-                if self.profile.physical_ic_count != count:
-                    self.profile = replace(self.profile, physical_ic_count=count)
-                if self.model == "H6102":
-                    self._resolve_device_profile()
-                for variant in self.profile.music_variants:
-                    for spec in music_body_params_for_mode(variant.mode_code, self.profile):
-                        if spec.key not in self._initialized_music_parameters:
-                            setattr(self, spec.key, spec.default)
-                            self._initialized_music_parameters.add(spec.key)
+            elif domain is StatusDomain.PHYSICAL_IC_COUNT:
+                if (count := parse_physical_ic_count(generated)) is not None:
+                    self._observed_physical_ic_count = count
+                    if self._client is not None and self._client.is_connected:
+                        self._physical_ic_count_confirmed = True
+                    if self.profile.physical_ic_count != count:
+                        self.profile = replace(self.profile, physical_ic_count=count)
+                    for variant in self.profile.music_variants:
+                        for spec in music_body_params_for_mode(variant.mode_code, self.profile):
+                            if spec.key not in self._initialized_music_parameters:
+                                setattr(self, spec.key, spec.default)
+                                self._initialized_music_parameters.add(spec.key)
             self._mark_received(domain, *observed)
             self.async_set_updated_data(self.data or {})
         except IndexError, ValueError:
@@ -2725,8 +2742,8 @@ class GoveeBLECoordinator(_DreamviewMixin, _ActiveModeMixin):
                 if self.profile.can_read(ReadDomain.SUBORDINATE_21):
                     candidates.append((build_subordinate_query(0x21, self.model), "subordinate_21_version"))
                 queries = [q for q, field in candidates if self._identity_field_incomplete(field)]
-                if self.profile.command_grammar == "H6099" and self.profile.physical_ic_count is None:
-                    queries.append(build_physical_ic_count_query(self.model))
+                if self.profile.can_read(ReadDomain.PHYSICAL_IC_COUNT) and not self._physical_ic_count_confirmed:
+                    queries.append(build_physical_ic_count_query(self.model, profile=self.profile))
                 for query in queries:
                     if generation != self._profile_generation:
                         break
@@ -2960,8 +2977,19 @@ class GoveeBLECoordinator(_DreamviewMixin, _ActiveModeMixin):
                 if actual != value:
                     raise ValueError("Device did not confirm the requested setting")
 
+    @property
+    def physical_ic_count_source(self) -> str:
+        if self.profile.physical_ic_count is None:
+            return "unknown"
+        if (
+            self._observed_physical_ic_count is not None
+            and self.profile.physical_ic_count == self._observed_physical_ic_count
+        ):
+            return "observed"
+        return "declared" if self.profile.physical_ic_count == get_profile(self.model).physical_ic_count else "unknown"
+
     def _identity_incomplete(self) -> bool:
-        return (self.profile.command_grammar == "H6099" and self.profile.physical_ic_count is None) or any(
+        return (self.profile.can_read(ReadDomain.PHYSICAL_IC_COUNT) and not self._physical_ic_count_confirmed) or any(
             self._identity_field_incomplete(field)
             for domain, field in (
                 (ReadDomain.FIRMWARE, "fw_version"),

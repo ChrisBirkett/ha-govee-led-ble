@@ -19,6 +19,7 @@ from custom_components.ha_govee_led_ble.generated_protocol_adapter import (
     music_default_palette,
     parse_physical_ic_count,
     parse_status_result,
+    require_profile_packet,
 )
 from custom_components.ha_govee_led_ble.music_commands import (
     build_music_params,
@@ -51,6 +52,8 @@ def test_ic_query_and_signed_big_endian_read(count):
     assert parse_physical_ic_count(result.parsed) == (count if count > 0 else None)
     with pytest.raises(ValueError):
         build_physical_ic_count_query("H617A")
+    with pytest.raises(ValueError):
+        require_profile_packet(frame("aa40"), get_profile("H617A"))
 
 
 def test_unknown_ic_blocks_only_dependent_companions():
