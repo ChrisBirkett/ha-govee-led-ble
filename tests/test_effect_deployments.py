@@ -717,28 +717,6 @@ async def test_legacy_device_cache_migrates_without_claiming_active_identity(
     assert migrated.active_effect is None
 
 
-async def test_recent_colours_are_owner_scoped_deduplicated_and_bounded(
-    hass: HomeAssistant,
-) -> None:
-    repository = EffectUserStateRepository(hass)
-    await repository.async_load()
-    repository.set(EffectUserState("user-a", navigation={"section": "scenes"}))
-
-    for value in range(MAX_RECENT_COLOURS + 2):
-        repository.record_colour("user-a", (value, 0, 0))
-    updated = repository.record_colour("user-a", (5, 0, 0))
-
-    assert len(updated.recent_colours) == MAX_RECENT_COLOURS
-    assert updated.recent_colours[0] == (5, 0, 0)
-    assert len(set(updated.recent_colours)) == MAX_RECENT_COLOURS
-    assert repository.get("user-b").recent_colours == ()
-
-    await repository.async_flush()
-    reloaded = EffectUserStateRepository(hass)
-    await reloaded.async_load()
-    assert reloaded.get("user-a") == updated
-
-
 async def test_user_state_migration_removes_retired_special_diy_navigation(
     hass: HomeAssistant,
 ) -> None:

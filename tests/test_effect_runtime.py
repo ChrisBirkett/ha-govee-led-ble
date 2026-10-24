@@ -382,7 +382,8 @@ async def test_partial_observation_does_not_confirm_or_repeat_activation(hass: H
 
 def _coordinator(*, readable: bool = True):
     coordinator = SimpleNamespace(
-        _control_lock=asyncio.Lock(),
+        _control_arbiter=(arbiter := BLEControlArbiter()),
+        _control_lock=arbiter,
         address="AA:BB:CC:DD:EE:FF",
         model="H617A",
         profile=get_profile("H617A")
@@ -1596,7 +1597,8 @@ async def test_custom_writes_wait_for_coordinator_control_lock(
     coordinator = _coordinator()
     _confirm_on_call(coordinator, 2, 800)
     engine = EffectDeploymentEngine(repository, cache)
-    await coordinator._control_lock.acquire()
+    hold = coordinator._control_arbiter.hold(ControlIntent.USER)
+    await hold.__aenter__()
 
     task = asyncio.create_task(
         engine.async_apply_saved(
@@ -1609,7 +1611,7 @@ async def test_custom_writes_wait_for_coordinator_control_lock(
     await asyncio.sleep(0)
     coordinator.send_command.assert_not_awaited()
 
-    coordinator._control_lock.release()
+    await hold.__aexit__(None, None, None)
     result = await task
 
     assert result.phase is DeploymentPhase.CONFIRMED

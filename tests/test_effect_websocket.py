@@ -47,7 +47,6 @@ from custom_components.ha_govee_led_ble.effect_websocket import (
     WS_TEMPLATE_DEFAULT_RESET,
     WS_TEMPLATE_DEFAULT_SET,
     WS_USER_STATE_GET,
-    WS_USER_STATE_RECORD_COLOUR,
     WS_USER_STATE_UPDATE,
     _light_entity_id,
     _send_preview_error,
@@ -749,20 +748,12 @@ async def test_user_state_contains_navigation_without_drafts(
         }
     )
     updated = (await client.receive_json())["result"]["user_state"]
-    await client.send_json_auto_id(
-        {
-            "type": WS_USER_STATE_RECORD_COLOUR,
-            "colour": [1, 2, 3],
-        }
-    )
-    coloured = (await client.receive_json())["result"]["user_state"]
     await client.send_json_auto_id({"type": WS_USER_STATE_GET})
     fetched = (await client.receive_json())["result"]["user_state"]
 
     assert updated["selected_config_entry_id"] == "entry-a"
     assert updated["navigation"] == {"section": "scenes", "item_id": "effect-a"}
-    assert coloured["recent_colours"] == [[1, 2, 3]]
-    assert fetched == coloured
+    assert fetched == updated
     assert "preferences" not in fetched
 
 

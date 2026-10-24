@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from collections.abc import Awaitable, Callable
 from contextlib import suppress
 from typing import cast
@@ -18,6 +19,8 @@ from homeassistant.core import HomeAssistant
 
 from .ble_device_resolver import BLEDeviceResolver
 from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 RETRY_BACKOFF_SECONDS = 2
 DEVICE_DISCOVERY_ATTEMPTS = 4
@@ -112,7 +115,8 @@ async def async_clear_gatt_cache(client: BleakClient) -> bool:
     try:
         async with asyncio.timeout(GATT_CACHE_CLEAR_TIMEOUT):
             return bool(await cast(BleakClientWithServiceCache, client).clear_cache())
-    except Exception:
+    except Exception as err:
+        _LOGGER.debug("GATT cache clear failed: %s", type(err).__name__)
         return False
 
 
@@ -159,7 +163,8 @@ async def async_establish_ble_connection(
                     async with asyncio.timeout(VALIDATION_DISCONNECT_TIMEOUT):
                         await bootstrap.disconnect()
                     disconnected = True
-                except Exception:
+                except Exception as err:
+                    _LOGGER.debug("Bootstrap disconnect failed during GATT recovery: %s", type(err).__name__)
                     disconnected = False
             if not cleared or not disconnected:
                 raise BleakError("Failed to recover the GATT cache")

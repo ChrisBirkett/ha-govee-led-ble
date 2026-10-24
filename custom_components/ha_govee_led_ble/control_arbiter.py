@@ -151,19 +151,6 @@ async def async_control_intent(
     *,
     wait: bool = True,
 ) -> AsyncIterator[bool]:
-    """Acquire a coordinator intent, falling back to legacy test-double locks."""
-    arbiter = getattr(coordinator, "_control_arbiter", None)
-    if isinstance(arbiter, BLEControlArbiter):
-        async with arbiter.hold(intent, wait=wait) as acquired:
-            yield acquired
-        return
-
-    lock = coordinator._control_lock
-    if not wait and lock.locked():
-        yield False
-        return
-    await lock.acquire()
-    try:
-        yield True
-    finally:
-        lock.release()
+    """Acquire a coordinator intent through its arbiter."""
+    async with coordinator._control_arbiter.hold(intent, wait=wait) as acquired:
+        yield acquired

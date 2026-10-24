@@ -96,7 +96,8 @@ def _coordinator(*, model: str = "H617A", readable: bool = False) -> SimpleNames
         if readable
         else replace(get_profile(model), read_domains=frozenset(), setup_required_read_domains=frozenset()),
         effect_families={EFFECT_FAMILY_SCENES},
-        _control_lock=asyncio.Lock(),
+        _control_arbiter=(arbiter := BLEControlArbiter()),
+        _control_lock=arbiter,
         is_on=False,
         effect=None,
         diy_code=None,

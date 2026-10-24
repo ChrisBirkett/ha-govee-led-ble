@@ -15,7 +15,6 @@ from .coordinator import GoveeBLECoordinator
 from .effect_compiler import compile_application, resolve_diy_code
 from .effect_deployments import DeploymentRecord, EffectDeploymentRepository
 from .effect_domain import (
-    RGB,
     EffectContent,
     EffectValidationError,
     JsonValue,
@@ -37,7 +36,6 @@ from .effect_selector import (
 )
 from .effect_storage import (
     EffectLibraryRepository,
-    EffectStorageError,
     EffectVersionConflictError,
     LibrarySnapshot,
 )
@@ -274,18 +272,6 @@ class EffectStudioApplication:
         )
         self.user_state.set(updated)
         return updated
-
-    def record_user_colour(
-        self,
-        owner_id: str,
-        colour: Sequence[int],
-    ) -> EffectUserState:
-        if len(colour) != 3:
-            raise EffectStorageError("colour must contain three channels")
-        return self.user_state.record_colour(
-            owner_id,
-            cast(RGB, tuple(colour)),
-        )
 
     @staticmethod
     def new_authored_item(
