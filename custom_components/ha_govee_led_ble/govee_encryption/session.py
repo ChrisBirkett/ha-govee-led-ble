@@ -158,6 +158,8 @@ class GoveeEncryptionSession:
                             async with asyncio.timeout(HANDSHAKE_TIMEOUT):
                                 await acquire_mtu()
                             mtu = client.mtu_size
+                        else:
+                            _LOGGER.debug("BLE backend has no _acquire_mtu; MTU stays at %s", mtu)
                 if generation != self._generation or not client.is_connected:
                     raise GoveeCryptoError("session_reset")
                 if type(mtu) is not int or mtu < MIN_MTU:
