@@ -150,7 +150,7 @@ class _RecoveryMixin(_CoordinatorBase):
             if self.is_on or self.control_write_attempts != attempts:
                 try:
                     await self.send_command(build_power(False, self.model), state_values={"is_on": False})
-                except BaseException:
+                except Exception:
                     _LOGGER.debug("Power-off cleanup failed during effect recovery", exc_info=True)
             raise
         await self.send_command(build_power(False, self.model), state_values={"is_on": False})
