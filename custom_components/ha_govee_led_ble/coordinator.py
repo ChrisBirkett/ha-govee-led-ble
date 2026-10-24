@@ -270,6 +270,7 @@ class GoveeBLECoordinator(_DreamviewMixin, _ActiveModeMixin, _NotificationMixin,
         # H6199 display settings and edge brightness. None means the first read has not landed.
         self.white_balance_red: int | None = None
         self.control_write_attempts = 0
+        self._static_write_attempts = 0
         self.white_balance_blue: int | None = None
         self.white_balance_flag: int | None = None
         self.white_balance_default_flag: int | None = None
@@ -1216,7 +1217,7 @@ class GoveeBLECoordinator(_DreamviewMixin, _ActiveModeMixin, _NotificationMixin,
             self.control_write_attempts += 1
             static = parse_static_write(packet, self.model, profile=self.profile)
             if static is not None:
-                self._static_write_attempts = getattr(self, "_static_write_attempts", 0) + 1
+                self._static_write_attempts += 1
                 rgb = static.rgb or static.kelvin_companion_rgb
                 if static.whole_strip and rgb is not None:
                     self.install_static_color(rgb=static.rgb, kelvin=static.kelvin)
@@ -2776,11 +2777,11 @@ class GoveeBLECoordinator(_DreamviewMixin, _ActiveModeMixin, _NotificationMixin,
         write_guard: Callable[[], None] | None = None,
         state_values: Mapping[str, Any] | None = None,
     ) -> None:
-        attempts = getattr(self, "_static_write_attempts", 0)
+        attempts = self._static_write_attempts
         try:
             await self._async_send_command(packet, write_guard=write_guard, state_values=state_values)
         except Exception:
-            if getattr(self, "_static_write_attempts", 0) != attempts and self.profile.can_read(ReadDomain.SEGMENTS):
+            if self._static_write_attempts != attempts and self.profile.can_read(ReadDomain.SEGMENTS):
                 try:
                     async with asyncio.timeout(2.0):
                         await self.async_refresh_segments()
@@ -2855,12 +2856,12 @@ class GoveeBLECoordinator(_DreamviewMixin, _ActiveModeMixin, _NotificationMixin,
                             expected_brightness = list(self.segment_brightness)
                         attempted = True
 
-                    attempts = getattr(self, "_static_write_attempts", 0)
+                    attempts = self._static_write_attempts
                     try:
                         await self.send_command(packet, write_guard=before_write)
                     except Exception:
                         # A later pre-write failure still leaves earlier groups applied.
-                        if attempted and getattr(self, "_static_write_attempts", 0) == attempts:
+                        if attempted and self._static_write_attempts == attempts:
                             try:
                                 async with asyncio.timeout(2.0):
                                     await self.async_refresh_segments()

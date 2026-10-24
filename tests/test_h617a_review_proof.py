@@ -168,7 +168,7 @@ async def test_static_connection_failure_preserves_observed_state(coordinator, c
     client.write_gatt_char.assert_not_awaited()
     refresh.assert_not_awaited()
     assert coordinator.control_write_attempts == 0
-    assert getattr(coordinator, "_static_write_attempts", 0) == 0
+    assert coordinator._static_write_attempts == 0
     assert coordinator.segment_state_source == "observed"
     assert coordinator.segment_state_observed_at is not None
     if fresh_notification:
