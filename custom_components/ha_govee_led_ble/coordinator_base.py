@@ -56,6 +56,7 @@ class _CoordinatorBase(DataUpdateCoordinator[dict[str, Any]]):
     pact_code: int | None
     _confirmed_identity_fields: set[str]
     control_write_attempts: int
+    _static_write_attempts: int
     _profile_generation: int
     _pre_mode_snapshot: PreModeSnapshot
     segment_colors: list[tuple[int, int, int]]

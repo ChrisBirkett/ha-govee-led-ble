@@ -253,7 +253,7 @@ class GoveeBLELight(_GoveeLightServicesMixin, GoveeBLEEntity, RestoreEntity, Lig
         generation = self.coordinator._profile_generation
         revisions = dict(self.coordinator._field_revisions)
         segment_revision = self.coordinator._domain_revisions.get(ReadDomain.SEGMENTS, 0)
-        static_attempts = getattr(self.coordinator, "_static_write_attempts", 0)
+        static_attempts = self.coordinator._static_write_attempts
         mode_snap = self._attr_color_mode
         try:
             yield
@@ -268,7 +268,7 @@ class GoveeBLELight(_GoveeLightServicesMixin, GoveeBLEEntity, RestoreEntity, Lig
             )
             segment_page_received = self.coordinator._domain_revisions.get(ReadDomain.SEGMENTS, 0) != segment_revision
             for f, v in snap.items():
-                if getattr(self.coordinator, "_static_write_attempts", 0) != static_attempts and (
+                if self.coordinator._static_write_attempts != static_attempts and (
                     f.startswith(("segment_", "_segment_")) or f in {"rgb_color_source", "color_temp_kelvin_source"}
                 ):
                     continue
