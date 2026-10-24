@@ -93,9 +93,14 @@ def prepare_video_mode(
         "sound_effects_softness": "sound_effects",
     }
     controls |= frozenset(control_by_field[field] for field in retained)
-    retained_parameters = dict(getattr(coordinator, "video_parameters", None) or {})
-    resolved_parameters = retained_parameters | dict(parameters or {})
     profile = coordinator.profile
+    observed_parameters = getattr(coordinator, "video_parameters", None)
+    retained_parameters = dict(
+        observed_parameters
+        if observed_parameters is not None
+        else (profile.default_video_parameters if parameters is None else None) or {}
+    )
+    resolved_parameters = retained_parameters | dict(parameters or {})
     client = getattr(coordinator, "_client", None)
     token = getattr(coordinator, "_notification_token", None)
 
@@ -107,16 +112,25 @@ def prepare_video_mode(
         coordinator.profile.validate_video_saturation(values["saturation"])
         if any(getattr(coordinator, f"video_{field}") != value for field, value in retained.items()):
             raise ValueError("Retained video settings changed before write; refresh and retry")
-        current = getattr(coordinator, "video_parameters", None) or {}
+        current_observed = getattr(coordinator, "video_parameters", None)
+        current = dict(
+            current_observed
+            if current_observed is not None
+            else (coordinator.profile.default_video_parameters if parameters is None else None) or {}
+        )
         if any(
             current.get(field) != value
             for field, value in retained_parameters.items()
             if field not in (parameters or {})
         ):
             raise ValueError("Retained video values changed before write; refresh and retry")
-        if retained_parameters.keys() - (parameters or {}).keys() and (
-            getattr(coordinator, "_client", None) is not client
-            or getattr(coordinator, "_notification_token", None) is not token
+        if (
+            observed_parameters is not None
+            and (retained_parameters.keys() - (parameters or {}).keys())
+            and (
+                getattr(coordinator, "_client", None) is not client
+                or getattr(coordinator, "_notification_token", None) is not token
+            )
         ):
             raise ValueError("Video connection changed before write; refresh and retry")
 

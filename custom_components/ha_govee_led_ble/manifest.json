@@ -361,6 +361,30 @@
         },
         {
             "local_name": "H7025_*"
+        },
+        {
+            "local_name": "ihoment_H66A0*"
+        },
+        {
+            "local_name": "Govee_H66A0*"
+        },
+        {
+            "local_name": "Minger_H66A0*"
+        },
+        {
+            "local_name": "GBK_H66A0*"
+        },
+        {
+            "local_name": "GVH_H66A0*"
+        },
+        {
+            "local_name": "GVH66A0*"
+        },
+        {
+            "local_name": "GV66A0*"
+        },
+        {
+            "local_name": "H66A0_*"
         }
     ],
     "codeowners": [

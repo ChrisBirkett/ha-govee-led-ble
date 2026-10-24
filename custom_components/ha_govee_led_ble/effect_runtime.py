@@ -1529,7 +1529,7 @@ def compiled_observation(
     if isinstance(compiled, CompiledMusicProfile):
         expectations["music_mode"] = compiled.mode
         # H617A settings are not confirmed by the shipped readback evidence.
-        if profile.status_grammar in {"H6099", "H6199"}:
+        if profile.status_grammar in {"H6099", "H6199", "H66A0"}:
             expectations["music_sensitivity"] = compiled.sensitivity
             variant = music_variant(
                 profile,

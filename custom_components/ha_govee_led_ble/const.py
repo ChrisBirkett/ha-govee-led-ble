@@ -8,6 +8,7 @@ from typing import Any
 
 from .h6199_calibration import WHITE_BALANCE_POSITIONS
 from .music_semantics import (
+    H66A0_MUSIC_VARIANTS,
     H617A_MUSIC_VARIANTS,
     H617C_MUSIC_VARIANTS,
     H617E_MUSIC_VARIANTS,
@@ -164,6 +165,7 @@ class ModelProfile:
     supports_scenes: bool = False
     supports_video_mode: bool = False
     video_modes: tuple[str, ...] = ()
+    default_video_parameters: tuple[tuple[str, int | str], ...] = ()
     supports_video_capture_region: bool = False
     supports_video_saturation: bool = False
     video_saturation_min: int = 0
@@ -209,6 +211,7 @@ class ModelProfile:
     supports_segment_writes: bool = False
     supports_segment_brightness: bool = False
     supports_segment_color_temperature: bool = False
+    segment_kelvin_renders_device_rgb: bool = False
     connection_idle_timeout: float | None = None
     scene_catalogue_sku: str | None = None
     legacy_scene_catalogue_sku: str | None = None
@@ -376,6 +379,12 @@ MUSIC_MODE_SLUGS: dict[str, int] = {
     "day_and_night": 0x37,
     "bloom": 0x30,
     "shiny": 0x31,
+    "flowing_light": 0x53,
+    "painting": 0x55,
+    "windmill": 0x78,
+    "splash": 0x84,
+    "spring": 0x85,
+    "beat": 0xA9,
 }
 
 _H6199_MUSIC_MODES = ("energetic", "rhythm", "spectrum", "rolling")
@@ -712,6 +721,88 @@ MODEL_PROFILES: dict[str, ModelProfile] = {
         supports_custom_effects=True,
         default_effect_families_override=frozenset({EFFECT_FAMILY_VIDEO}),
         # Ordinary DIY uses Sub4Diy, not an H6199 scene or Workshop carrier.
+        effect_readback="diy_code_only",
+    ),
+    "H66A0": ModelProfile(
+        "H66A0 TV Backlight 3 Pro",
+        support_quality=SupportQuality.EXPERIMENTAL,
+        command_grammar="H6099",
+        status_grammar="H66A0",
+        effect_grammar="H6099",
+        music_grammar="H66A0",
+        video_grammar="H66A0-video",
+        read_domains=frozenset(
+            {
+                ReadDomain.POWER,
+                ReadDomain.BRIGHTNESS,
+                ReadDomain.COLOUR_MODE,
+                ReadDomain.FIRMWARE,
+                ReadDomain.HARDWARE,
+                ReadDomain.DISPLAY_SETTING,
+                ReadDomain.SUBORDINATE_20,
+                ReadDomain.SUBORDINATE_21,
+                ReadDomain.RELATIVE_BRIGHTNESS,
+                ReadDomain.SEGMENTS,
+                ReadDomain.PHYSICAL_IC_COUNT,
+                ReadDomain.INSTALLATION_DIRECTION,
+                ReadDomain.CAMERA_HEALTH,
+            }
+        ),
+        setup_required_read_domains=frozenset({ReadDomain.POWER, ReadDomain.BRIGHTNESS, ReadDomain.COLOUR_MODE}),
+        supports_installation_direction=True,
+        supports_rgb=True,
+        supports_color_temperature=True,
+        static_readback_kelvin=True,
+        static_readback_zero_kelvin_is_rgb=True,
+        supports_scenes=True,
+        supports_video_mode=True,
+        video_modes=("movie", "game"),
+        default_video_parameters=(("picture_preset", "vivid"), ("opaque", 2)),
+        supports_video_saturation=True,
+        video_saturation_min=1,
+        supports_video_sound_effects=True,
+        supports_white_balance=True,
+        supports_white_balance_readback=True,
+        video_white_balance_representation="scalar",
+        video_white_balance_default=50,
+        video_white_balance_max=100,
+        video_white_balance_calibration=tuple((value,) for value in range(1, 101)),
+        video_brightness_zones=("left", "top", "right", "bottom"),
+        supports_relative_brightness=True,
+        supports_blank_screen=True,
+        supports_black_border=True,
+        physical_ic_count=90,
+        music_variants=H66A0_MUSIC_VARIANTS,
+        music_upload_before_selector=True,
+        supports_music_color=True,
+        music_modes=(
+            "energetic",
+            "rhythm",
+            "spectrum",
+            "rolling",
+            "separation",
+            "hopping",
+            "piano_keys",
+            "fountain",
+            "day_and_night",
+            "bloom",
+            "splash",
+            "spring",
+            "painting",
+            "beat",
+            "windmill",
+            "flowing_light",
+        ),
+        whole_device_mask=0x3FFF,
+        segment_count=14,
+        segment_group_size=4,
+        supports_segment_writes=True,
+        supports_segment_brightness=True,
+        supports_segment_color_temperature=True,
+        segment_kelvin_renders_device_rgb=True,
+        scene_catalogue_sku="H66A0",
+        supports_custom_effects=True,
+        default_effect_families_override=frozenset({EFFECT_FAMILY_VIDEO}),
         effect_readback="diy_code_only",
     ),
     "H617A": _H617A_PROFILE,

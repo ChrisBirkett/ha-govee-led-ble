@@ -44,7 +44,7 @@ def device(hass, monkeypatch):
 
 @pytest.mark.parametrize("mode,source", [("movie", "00"), ("game", "01")])
 async def test_selector_compiled_and_recovery_preserve_values(device, monkeypatch, mode, source):
-    assert "H66A0" not in MODEL_PROFILES
+    assert MODEL_PROFILES["H66A0"].video_grammar == "H66A0-video"
     assert device.video_parameters == {"picture_preset": "delicate", "opaque": 0xA5}
     assert device._field_revisions["video_parameters"] == 1
 

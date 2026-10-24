@@ -921,8 +921,11 @@ class GoveeBLECoordinator(_DreamviewMixin, _ActiveModeMixin):
             if (
                 kelvin_restore
                 and state.color_temp_kelvin is not None
-                and state.segment_colors
-                != (kelvin_companion_rgb(state.color_temp_kelvin, self.profile),) * self.profile.segment_count
+                and (
+                    self.profile.segment_kelvin_renders_device_rgb
+                    or state.segment_colors
+                    != (kelvin_companion_rgb(state.color_temp_kelvin, self.profile),) * self.profile.segment_count
+                )
             ):
                 # Whole-device Kelvin cannot reproduce a simultaneously captured
                 # different RGB layout. Preserve it instead of overwriting it.
@@ -1485,6 +1488,7 @@ class GoveeBLECoordinator(_DreamviewMixin, _ActiveModeMixin):
         self._client = None
         self._music_palette = self._music_body = None
         self._notification_token = None
+        self.video_parameters = None
         self._confirmed_identity_fields.clear()
         self._authorization_generation += 1
         self._configured_strings_confirmed = False
@@ -1671,7 +1675,11 @@ class GoveeBLECoordinator(_DreamviewMixin, _ActiveModeMixin):
         ):
             rendered = self.segment_colors[0]
             kelvin = self.color_temp_kelvin
-            if kelvin is not None and rendered != kelvin_companion_rgb(kelvin, self.profile):
+            if (
+                kelvin is not None
+                and not (self.profile.segment_kelvin_renders_device_rgb and rendered[0] >= 200 and rendered[1] >= 100)
+                and rendered != kelvin_companion_rgb(kelvin, self.profile)
+            ):
                 kelvin = None
             if self._accept_expected_values({"rgb_color": rendered, "color_temp_kelvin": kelvin}):
                 self.rgb_color = rendered
@@ -2146,7 +2154,7 @@ class GoveeBLECoordinator(_DreamviewMixin, _ActiveModeMixin):
                     int(generated.values["brightness_pct"])
                     if isinstance(generated, ParsedH6179Status)
                     else int(generated.body.percent)
-                    if self.profile.status_grammar in {"H6099", "H6199"}
+                    if self.profile.status_grammar in {"H6099", "H6199", "H66A0"}
                     else int(generated.body.register)
                     if hasattr(generated.body, "register")
                     else int(generated.body.brightness_pct)
@@ -2225,6 +2233,8 @@ class GoveeBLECoordinator(_DreamviewMixin, _ActiveModeMixin):
                 if generated.body.edge_count != len(zones):
                     raise ValueError("relative-brightness topology mismatch")
                 edges = tuple(int(getattr(generated.body, f"{zone}_percent")) for zone in zones)
+                if any(not 0 <= value <= 100 for value in edges):
+                    raise ValueError("relative-brightness edge is outside percentage bounds")
                 aggregate = edges[0] if len(set(edges)) == 1 else None
                 edge_values: dict[str, Any] = {
                     "relative_brightness": aggregate,
@@ -4100,6 +4110,7 @@ class GoveeBLECoordinator(_DreamviewMixin, _ActiveModeMixin):
         client = self._client
         # Invalidate callbacks and keys before disconnect can yield or be cancelled.
         self._music_palette = self._music_body = None
+        self.video_parameters = None
         self._notification_token = None
         if self._encryption is not None:
             self._encryption.reset()

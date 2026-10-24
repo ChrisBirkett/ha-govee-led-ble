@@ -597,6 +597,57 @@ RELEASE_CAPABILITY_CONTRACT: Final = (
     ),
     *(
         _capability(
+            "H66A0",
+            workflow,
+            label,
+            kind,
+            ApplicationRoute.HOME_ASSISTANT_CONTROL,
+            CompilerDeployerStrategy.A3_EFFECT_UPLOAD,
+            VerificationConfidence.UNVERIFIED,
+            PhysicalValidationState.NOT_VALIDATED,
+            EvidenceClassification.STRUCTURAL,
+        )
+        for workflow, label, kind in (
+            (CapabilityWorkflow.PAINTED, "Graffiti", "h617a_painted"),
+            (CapabilityWorkflow.SINGLE, "Basic", "h617a_single"),
+            (CapabilityWorkflow.MULTI, "Mixed", "h617a_multi"),
+        )
+    ),
+    _capability(
+        "H66A0",
+        CapabilityWorkflow.NATIVE_SCENES,
+        "Scenes",
+        "scene_builtin",
+        ApplicationRoute.STUDIO_SCENE_APPLY,
+        CompilerDeployerStrategy.NATIVE_EFFECT_SELECTION,
+        VerificationConfidence.SELECTION_ONLY,
+        PhysicalValidationState.CAPTURE_VALIDATED,
+        EvidenceClassification.STRUCTURAL,
+    ),
+    _capability(
+        "H66A0",
+        CapabilityWorkflow.NATIVE_MUSIC,
+        "Music",
+        "music_profile",
+        ApplicationRoute.HOME_ASSISTANT_CONTROL,
+        CompilerDeployerStrategy.COORDINATOR_WRITER,
+        VerificationConfidence.SELECTION_ONLY,
+        PhysicalValidationState.CAPTURE_VALIDATED,
+        EvidenceClassification.STRUCTURAL,
+    ),
+    _capability(
+        "H66A0",
+        CapabilityWorkflow.VIDEO,
+        "Video",
+        "video_profile",
+        ApplicationRoute.HOME_ASSISTANT_CONTROL,
+        CompilerDeployerStrategy.COORDINATOR_WRITER,
+        VerificationConfidence.UNVERIFIED,
+        PhysicalValidationState.NOT_VALIDATED,
+        EvidenceClassification.STRUCTURAL,
+    ),
+    *(
+        _capability(
             "H7025",
             workflow,
             label,

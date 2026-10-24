@@ -48,6 +48,9 @@ speculative/h6179_status_reply
 speculative/h7020_command_write
 speculative/h7020_status_query
 speculative/h7020_status_reply
+speculative/h66a0_status_reply
+speculative/h66a0_music_write
+speculative/h66a0_music_parameters
 speculative/h66a0_video_command
 speculative/h66a0_video_status
 h6199_command_write

@@ -59,6 +59,41 @@ def test_h7025_exact_status_root_covers_declared_reads_and_music_numbering():
     assert parse_color_mode(unknown.generated, "H7025").mode is ParsedMode.UNKNOWN
 
 
+_H66A0_SEGMENT_PAGES = (
+    "aaa50164e5444464ffae5464ffae5464cf2e2e24",
+    "aaa50264c7262664c01f1f64b9181864b2111101",
+    "aaa50364ba191964c3222264cb2a2a64d433336a",
+    "aaa50464dc3b3b64e54444000000000000000032",
+)
+
+
+def test_h66a0_exact_status_root_covers_declared_reads_with_captured_pages():
+    frames = (
+        _h6179_status(1, b"\x01"),
+        _h6179_status(4, b"\x64"),
+        _h6179_status(5, H("1305")),
+        _h6179_status(6, b"1.00.24\0"),
+        _h6179_status(7, b"\x033.07.01\0"),
+        _h6179_status(0x20, b"6.01.00\0"),
+        _h6179_status(0x21, b"1.01.18\0"),
+        _h6179_status(0x30, b"\x02"),
+        _h6179_status(0x32, b"\x01"),
+        _h6179_status(0x40, b"\x00\x5a"),
+        _h6179_status(0xA9, b"\x06\x01\x32"),
+        _h6179_status(0xAE, b"\x01\x04\x64\x64\x64\x64"),
+        *(H(page) for page in _H66A0_SEGMENT_PAGES),
+    )
+    decoded = [decode_status_frame_result(frame, "H66A0") for frame in frames]
+    assert all(result.parser == "h66a0_status_reply" and result.rejection is None for result in decoded)
+    assert {result.parsed.domain for result in decoded} == MODEL_PROFILES["H66A0"].read_domains
+    assert decoded[3].parsed.generated.body.text == "1.00.24"
+    music = parse_color_mode(decoded[2].parsed.generated, "H66A0")
+    assert music.mode is ParsedMode.MUSIC and music.music_mode == "energetic"
+    pages = [result.parsed.generated.body for result in decoded[12:]]
+    assert [len(page.segments) for page in pages] == [4, 4, 4, 2]
+    assert sum(len(page.segments) for page in pages) == MODEL_PROFILES["H66A0"].segment_count
+
+
 def test_status_envelope_rejects_invalid_frames() -> None:
     assert decode_status_frame(b"") is None
     assert decode_status_frame(H("3301010000000000000000000000000000000033")) is None
@@ -96,7 +131,7 @@ def test_production_three_record_status_contract(model: str) -> None:
         assert decode_status_frame_result(bytes(frame), model).rejection is ProtocolParseRejection.SCHEMA_REJECTED
     issue_frame = H("aaa50164e5444464ffae5464ffae5464cf2e2e24")
     assert decode_status_frame_result(issue_frame, model).rejection is ProtocolParseRejection.SCHEMA_REJECTED
-    assert decode_status_frame_result(issue_frame, "H66A0").rejection is ProtocolParseRejection.UNSUPPORTED_MODEL
+    assert decode_status_frame_result(issue_frame, "H66A0").parsed is not None
 
 
 def test_h617a_colour_modes_preserve_scene_diy_and_music_semantics() -> None:

@@ -10,6 +10,7 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from custom_components.ha_govee_led_ble.const import get_profile
 from custom_components.ha_govee_led_ble.coordinator import GoveeBLECoordinator
+from custom_components.ha_govee_led_ble.coordinator_status import ParsedMode
 from custom_components.ha_govee_led_ble.generated_protocol_adapter import build_colour_temperature
 from custom_components.ha_govee_led_ble.light import GoveeBLELight
 from custom_components.ha_govee_led_ble.light_commands import build_segment_color_temp, parse_static_write
@@ -176,3 +177,66 @@ async def test_masked_kelvin_requires_fresh_rgb_and_preserves_siblings(hass, mon
             assert colors == [(255, 177, 109)] + original_colors[1:]
             assert brightness == original_brightness
             assert coordinator.async_refresh_segments.await_count == 2
+
+
+@pytest.mark.parametrize(
+    "failure",
+    [None, "non_white", "disagreeing_selected", "sibling", "wrong_kelvin"],
+)
+async def test_h66a0_segment_kelvin_confirms_device_rendered_rgb_and_mode_kelvin(hass, monkeypatch, failure):
+    coordinator = GoveeBLECoordinator(hass, "AA:BB:CC:DD:EE:FF", "H66A0", configuration_url=None)
+    light = GoveeBLELight(coordinator)
+    monkeypatch.setattr(light, "_async_supersede_preview", AsyncMock())
+    monkeypatch.setattr(light, "_notify_state_changed", MagicMock())
+    monkeypatch.setattr(coordinator, "_renew_foreground_lease", MagicMock())
+    monkeypatch.setattr(coordinator, "_disconnect_locked", AsyncMock())
+    colors = [(10, 20, 30)] * 14
+    brightness = [80] * 14
+
+    async def transmit(_uuid, packet, **_kwargs):
+        if packet[0] == 0x33:
+            colors[0] = (0, 0, 255) if failure == "non_white" else (255, 157, 51)
+            colors[1] = (255, 180, 90) if failure == "disagreeing_selected" else (255, 157, 51)
+            if failure == "sibling":
+                colors[2] = (99, 99, 99)
+            return
+        if packet[:2] == b"\xaa\x05":
+            kelvin_hex = "0fa0" if failure == "wrong_kelvin" else "0bb8"
+            frame = bytes.fromhex(f"aa051500{kelvin_hex}").ljust(19, b"\x00")
+            coordinator._notify_callback(None, bytearray(frame + bytes([xor_checksum(frame)])))
+            return
+        assert packet[:2] == b"\xaa\xa5"
+        page = packet[2]
+        start = (page - 1) * 4
+        end = min(page * 4, 14)
+        records = b"".join(bytes([brightness[i], *colors[i]]) for i in range(start, end))
+        payload = (bytes([0xAA, 0xA5, page]) + records).ljust(19, b"\x00")
+        coordinator._notify_callback(None, bytearray(payload + bytes([xor_checksum(payload)])))
+
+    client = MagicMock(is_connected=True, write_gatt_char=AsyncMock(side_effect=transmit))
+    coordinator._client = client
+    monkeypatch.setattr(coordinator, "_ensure_connected", AsyncMock(return_value=client))
+    if failure:
+        with pytest.raises(HomeAssistantError):
+            await light.async_set_segment_color_temp([1, 2], 3000)
+    else:
+        await light.async_set_segment_color_temp([1, 2], 3000)
+        assert coordinator.color_temp_kelvin is None
+        assert coordinator.segment_colors[:2] == [(255, 157, 51), (255, 157, 51)]
+
+
+async def test_h66a0_kelvin_restore_refuses_to_widen_masked_kelvin_to_whole_strip(hass, monkeypatch):
+    coordinator = GoveeBLECoordinator(hass, "AA:BB:CC:DD:EE:FF", "H66A0", configuration_url=None)
+    coordinator.is_on = True
+    coordinator.brightness_pct = 80
+    coordinator.color_mode = ParsedMode.COLOUR
+    coordinator.color_temp_kelvin = 3000
+    coordinator.segment_colors = [(255, 157, 51)] * 14
+    coordinator.segment_brightness = [80] * 14
+    coordinator.segment_state_source = "observed"
+    state = coordinator.capture_effect_control_state()
+    send_command = AsyncMock()
+    monkeypatch.setattr(coordinator, "send_command", send_command)
+
+    assert await coordinator.async_restore_effect_control_state(state, overwritten_diy_code=None) is False
+    send_command.assert_not_awaited()

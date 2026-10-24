@@ -30,6 +30,7 @@ test("canonical backend catalogue decodes through the production catalogue valid
     "H617C",
     "H617E",
     "H6199",
+    "H66A0",
     "H7020",
     "H7025",
   ]);

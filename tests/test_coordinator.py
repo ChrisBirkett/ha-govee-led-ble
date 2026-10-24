@@ -4659,3 +4659,60 @@ def test_unknown_model_encoders_fail_closed() -> None:
 def test_h6199_subordinate_queries_exclude_identity_domain() -> None:
     with pytest.raises(ValueError, match="0x20 or 0x21"):
         build_h6199_subordinate_query(0x14)
+
+
+async def test_h66a0_setup_survives_identity_replies_inside_the_refresh(hass, monkeypatch, virtual_clock):
+    coordinator = GoveeBLECoordinator(hass, "11:22:33:44:55:66", "H66A0", configuration_url="test")
+
+    def status(domain: int, payload: str) -> bytes:
+        frame = bytes((0xAA, domain)) + bytes.fromhex(payload).ljust(17, b"\0")
+        return frame + bytes((xor_checksum(frame),))
+
+    replies = {0x01: "01", 0x04: "64", 0x05: "1500100400"}
+    late = ((0x07, "03332e30372e3031"), (0x06, "312e30302e3234"), (0x20, "362e30312e3030"), (0x21, "312e30312e3138"))
+    pages = (
+        "0146ffc68246ffc68246ffc68264ffc682",
+        "0264ffc68264ffc68264ffc68264ffc682",
+        "0364ffc68264ffc68264ffc68264ffc682",
+        "0464ffc68264ffc6820000000000000000",
+    )
+
+    async def transmit(_uuid, packet, **_kwargs):
+        if packet[1] == 0x01:
+            for domain, payload in late:
+                coordinator._notify_callback(None, status(domain, payload))
+        if packet[1] == 0xA5:
+            for page in pages:
+                coordinator._notify_callback(None, status(0xA5, page))
+        elif packet[1] in replies:
+            coordinator._notify_callback(None, status(packet[1], replies[packet[1]]))
+
+    client = MagicMock(is_connected=True, write_gatt_char=AsyncMock(side_effect=transmit), disconnect=AsyncMock())
+    coordinator._client = client
+    monkeypatch.setattr(coordinator, "_ensure_connected", AsyncMock(return_value=client))
+    await coordinator._async_update_data()
+    assert coordinator.available
+    assert (coordinator.fw_version, coordinator.hw_version) == ("1.00.24", "3.07.01")
+    assert (coordinator.subordinate_20_version, coordinator.subordinate_21_version) == ("6.01.00", "1.01.18")
+    assert coordinator.segment_state_source == "observed"
+
+
+@pytest.mark.parametrize("model", ["H66A0"])
+@pytest.mark.parametrize(
+    ("reply", "expected"),
+    [("15000bb8", {"expected_color_temp_kelvin": 3000}), ("15000000", {"expected_zero_kelvin": True})],
+)
+async def test_static_readback_confirms_measured_kelvin_and_rgb(
+    hass, monkeypatch, model, reply, expected, virtual_clock
+):
+    coordinator = GoveeBLECoordinator(hass, "11:22:33:44:55:66", model, configuration_url="test")
+
+    async def transmit(_uuid, packet, **_kwargs):
+        if packet[1] == 0x05:
+            frame = bytes.fromhex("aa05" + reply).ljust(19, b"\0")
+            coordinator._notify_callback(None, frame + bytes((xor_checksum(frame),)))
+
+    client = MagicMock(is_connected=True, write_gatt_char=AsyncMock(side_effect=transmit), disconnect=AsyncMock())
+    coordinator._client = client
+    monkeypatch.setattr(coordinator, "_ensure_connected", AsyncMock(return_value=client))
+    assert await coordinator.refresh_state(**expected)

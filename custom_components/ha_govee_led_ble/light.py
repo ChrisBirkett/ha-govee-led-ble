@@ -628,7 +628,14 @@ class GoveeBLELight(_GoveeLightServicesMixin, GoveeBLEEntity, RestoreEntity, Lig
                 restored_kelvin is not None
                 and coordinator.segment_colors
                 and len(set(coordinator.segment_colors)) == 1
-                and coordinator.segment_colors[0] == kelvin_to_rgb(restored_kelvin)
+                and (
+                    (
+                        coordinator.profile.segment_kelvin_renders_device_rgb
+                        and coordinator.segment_colors[0][0] >= 200
+                        and coordinator.segment_colors[0][1] >= 100
+                    )
+                    or coordinator.segment_colors[0] == kelvin_to_rgb(restored_kelvin)
+                )
             ):
                 coordinator.color_temp_kelvin = restored_kelvin
                 coordinator.color_temp_kelvin_source = "restored"
@@ -864,7 +871,8 @@ class GoveeBLELight(_GoveeLightServicesMixin, GoveeBLEEntity, RestoreEntity, Lig
                 else None,
                 coordinator.music_calm if variant and variant.supports_style else False,
                 {},
-                include_parameters=bool(variant and variant.supports_style),
+                include_parameters=coordinator.profile.music_upload_before_selector
+                or bool(variant and variant.supports_style),
                 profile=coordinator.profile,
             )
             return partial(coordinator.async_select_music_slug, selected.value)

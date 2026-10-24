@@ -555,6 +555,38 @@ H6099_DIY_FAMILIES: Final = tuple(
     )
 )
 
+# Android 7.6.01 pact_h6099/detail/diy/H66A0DiyConfig, goods 327.
+H66A0_DIY_FAMILIES: Final = tuple(
+    DiyEffectFamily(
+        name,
+        label,
+        family,
+        tuple(
+            DiyEffectVariation(str(variant), f"Variation {index + 1}", variant)
+            for index, variant in enumerate(variants)
+        ),
+        family in (0, 1, 2, 3, 8, 9),
+        rate="speed",
+        rate_min=1,
+        rate_max=100,
+        palette_max=3 if family == 10 else 8,
+        source_reference="Android 7.6.01 H66A0DiyConfig.getBasicEffectList/getMixEffectList",
+    )
+    for name, label, family, variants in (
+        ("fade", "Fade", 0, (0, 1, 2)),
+        ("jumping", "Jumping", 1, (0, 2)),
+        ("blinking", "Blinking", 2, (0, 1, 2)),
+        ("marquee", "Marquee", 3, (3, 4, 5)),
+        ("stream", "Stream", 8, (9, 10)),
+        ("flow", "Flow", 9, (9, 10)),
+        ("chase", "Chase", 10, (0,)),
+        ("fill", "Fill", 37, (0,)),
+        ("confrontation", "Confrontation", 38, (0, 1)),
+        ("stretch", "Stretch", 39, (0,)),
+        ("halo_dyeing", "Halo Dyeing", 40, (0, 1)),
+    )
+)
+
 H7020_DIY_FAMILIES: Final = (
     DiyEffectFamily(
         "fade",
@@ -1423,6 +1455,42 @@ MODEL_EFFECT_CATALOGUES: Final = {
             multi=studio_apply_capability_state("H6099", CapabilityWorkflow.MULTI),
             palette_diy=studio_apply_capability_state("H6099", CapabilityWorkflow.PALETTE_DIY),
             workshop=studio_apply_capability_state("H6099", CapabilityWorkflow.WORKSHOP),
+        ),
+    ),
+    "H66A0": ModelEffectCatalogue(
+        sku="H66A0",
+        painted_addressing="physical_ic",
+        painted_background=(255, 255, 255),
+        painted_effects=tuple(
+            {"id": name, "label": name.replace("_", " ").capitalize()}
+            for name in ("clockwise", "counter_clockwise", "cycle", "gradient", "twinkle", "breathe")
+        ),
+        effects=H66A0_DIY_FAMILIES,
+        music_modes=_native_music_modes("H66A0"),
+        video_modes=_native_video_modes("H66A0"),
+        templates=(
+            CatalogueTemplate(
+                "template:paint",
+                "Graffiti",
+                "single-layer",
+                PaintedEffect("clockwise", 50, 100, (None,), background=(255, 255, 255), addressing="physical_ic"),
+            ),
+            *(_single_template("H66A0", family) for family in H66A0_DIY_FAMILIES),
+            *(_music_template("H66A0", mode) for mode in _native_music_modes("H66A0")),
+            *(_video_template("H66A0", mode, saturation=100) for mode in _native_video_modes("H66A0")),
+        ),
+        workshop_templates=(),
+        supports=CatalogueSupport(
+            multi=workflow_capability_state("H66A0", CapabilityWorkflow.MULTI),
+            advanced=workflow_capability_state("H66A0", CapabilityWorkflow.ADVANCED),
+            workshop=workflow_capability_state("H66A0", CapabilityWorkflow.WORKSHOP),
+        ),
+        apply=ApplySupport(
+            painted=studio_apply_capability_state("H66A0", CapabilityWorkflow.PAINTED),
+            single=studio_apply_capability_state("H66A0", CapabilityWorkflow.SINGLE),
+            multi=studio_apply_capability_state("H66A0", CapabilityWorkflow.MULTI),
+            palette_diy=studio_apply_capability_state("H66A0", CapabilityWorkflow.PALETTE_DIY),
+            workshop=studio_apply_capability_state("H66A0", CapabilityWorkflow.WORKSHOP),
         ),
     ),
     "H6125": ModelEffectCatalogue(

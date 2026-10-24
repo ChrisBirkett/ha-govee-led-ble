@@ -116,6 +116,10 @@ H6102WireWrite = cast(
     Any,
     import_module("custom_components.ha_govee_led_ble.generated_protocol.h6102_wire_write").H6102WireWrite,
 )
+H66a0StatusReply = cast(
+    Any,
+    import_module("custom_components.ha_govee_led_ble.generated_protocol.h66a0_status_reply").H66a0StatusReply,
+)
 H6199StatusReply = cast(
     Any,
     import_module("custom_components.ha_govee_led_ble.generated_protocol.h6199_status_reply").H6199StatusReply,
@@ -217,6 +221,9 @@ H7025MusicBody = cast(
 )
 H7025MusicWrite = cast(
     Any, import_module("custom_components.ha_govee_led_ble.generated_protocol.h7025_music_write").H7025MusicWrite
+)
+H66a0MusicWrite = cast(
+    Any, import_module("custom_components.ha_govee_led_ble.generated_protocol.h66a0_music_write").H66a0MusicWrite
 )
 H7025StatusReply = cast(
     Any, import_module("custom_components.ha_govee_led_ble.generated_protocol.h7025_status_reply").H7025StatusReply
@@ -381,6 +388,7 @@ _STATUS_ROOTS = {
     "H6125-legacy": ("h6125_legacy_status_reply", H6125LegacyStatusReply),
     "H6125-intermediate": ("h6125_intermediate_status_reply", H6125IntermediateStatusReply),
     "H6099": ("h6099_status_reply", H6099StatusReply),
+    "H66A0": ("h66a0_status_reply", H66a0StatusReply),
     "H617A": ("status_reply", StatusReply),
     "H617C": ("h617c_status_reply", H617cStatusReply),
     "H7025": ("h7025_status_reply", H7025StatusReply),
@@ -407,6 +415,7 @@ _STATUS_QUERY_ROOTS = {
 _H6076_ACK_ROOTS = {"H6076": ("h6076_music_ack", H6076MusicAck)}
 _MUSIC_WRITE_ROOTS = {
     "H6076": ("h6076_music_write", H6076MusicWrite),
+    "H66A0": ("h66a0_music_write", H66a0MusicWrite),
     "H7025": ("h7025_music_write", H7025MusicWrite),
 }
 _COMMAND_ACK_ROOTS = {
@@ -457,7 +466,7 @@ def _parse_xor_frame(
     try:
         parsed = root_type(KaitaiStream(io.BytesIO(frame)))
         parsed._read()
-    except KaitaiStructError, UnicodeDecodeError:
+    except KaitaiStructError, UnicodeDecodeError, EOFError:
         return ProtocolParseResult(None, parser, ProtocolParseRejection.SCHEMA_REJECTED)
     return ProtocolParseResult(parsed, parser, None)
 
@@ -476,6 +485,26 @@ def parse_command_result(
     frame: bytes, model: str = "H617A", *, profile: ModelProfile | None = None
 ) -> ProtocolParseResult:
     effective_profile = profile or get_profile(model)
+    if (
+        effective_profile.video_grammar == "H66A0-video"
+        and effective_profile.supports_video_mode
+        and frame[:3] == b"\x33\x05\x00"
+    ):
+        video = _parse_xor_frame(frame, "H66A0-video", {"H66A0-video": ("h66a0_video_command", H66a0VideoCommand)})
+        if video.parsed is not None:
+            if (
+                getattr(video.parsed.detail.source, "name", None) not in effective_profile.video_modes
+                or getattr(video.parsed.detail.picture_preset, "name", None) is None
+                or video.parsed.detail.sound_effects not in (0, 1)
+                or not 0 <= video.parsed.detail.softness <= 100
+            ):
+                return ProtocolParseResult(None, video.parser, ProtocolParseRejection.SEMANTIC_REJECTED)
+            try:
+                effective_profile.validate_video_saturation(int(video.parsed.detail.saturation))
+            except ValueError:
+                return ProtocolParseResult(None, video.parser, ProtocolParseRejection.SEMANTIC_REJECTED)
+            return video
+        return video
     if effective_profile.music_grammar in _MUSIC_WRITE_ROOTS:
         music = _parse_xor_frame(frame, effective_profile.music_grammar, _MUSIC_WRITE_ROOTS)
         if music.parsed is not None:
@@ -487,8 +516,13 @@ def parse_command_result(
         _has_unknown_discriminator(result.parsed, result.parser or "")
         or (
             effective_profile.music_grammar in _MUSIC_WRITE_ROOTS
-            and getattr(result.parsed.opcode, "name", None) == "multi"
-            and getattr(result.parsed.body.sub, "name", None) == "music"
+            and getattr(result.parsed.opcode, "name", None) in {"multi", "mode"}
+            and getattr(
+                getattr(result.parsed.body, "sub", getattr(result.parsed.body, "sub_mode", None)),
+                "name",
+                None,
+            )
+            == "music"
         )
     ):
         return ProtocolParseResult(None, result.parser, ProtocolParseRejection.SEMANTIC_REJECTED)
@@ -807,6 +841,24 @@ def require_profile_packet(frame: bytes, profile: ModelProfile) -> None:
             ):
                 raise ValueError("fixed music colour is outside profile capabilities")
             return
+    if profile.video_grammar == "H66A0-video" and profile.supports_video_mode:
+        video = parse_video_command(frame, "", profile=profile)
+        if video is not None:
+            if profile.command_operations is not None and "video" not in profile.command_operations:
+                raise ValueError(f"{profile.name} does not support video")
+            if getattr(video.detail.source, "name", None) not in profile.video_modes:
+                raise ValueError("video mode source is outside profile capabilities")
+            validate_video_parameters(
+                profile.video_grammar,
+                {
+                    "picture_preset": getattr(video.detail.picture_preset, "name", None),
+                    "opaque": int(video.detail.opaque),
+                },
+            )
+            profile.validate_video_saturation(int(video.detail.saturation))
+            if video.detail.sound_effects not in (0, 1) or not 0 <= video.detail.softness <= 100:
+                raise ValueError("invalid video sound effects or softness")
+            return
     command = _parse_xor_frame(frame, profile.command_grammar, _COMMAND_ROOTS).parsed
     if command is not None:
         operation = getattr(command.opcode, "name", "")
@@ -815,11 +867,23 @@ def require_profile_packet(frame: bytes, profile: ModelProfile) -> None:
             sub_operation = getattr(sub_attr, "name", "")
             if profile.command_operations is not None and sub_operation not in {"static", "static_colour"}:
                 operation = sub_operation
-            if sub_operation == "music" and getattr(command.opcode, "name", "") == "multi":
+            if sub_operation == "music" and getattr(command.opcode, "name", "") in {"multi", "mode"}:
                 if (
                     profile.music_grammar in _MUSIC_WRITE_ROOTS
                     or music_slug_for(
-                        profile.command_grammar or "", int(command.body.sub_body.mode_id), profile=profile
+                        profile.command_grammar or "",
+                        int(
+                            getattr(
+                                getattr(command.body, "sub_body", getattr(command.body, "detail", None)),
+                                "mode_id",
+                                getattr(
+                                    getattr(command.body, "sub_body", getattr(command.body, "detail", None)),
+                                    "mode",
+                                    -1,
+                                ),
+                            )
+                        ),
+                        profile=profile,
                     )
                     not in profile.music_modes
                 ):
@@ -1365,6 +1429,14 @@ def _video_grammar(model: str, profile: ModelProfile | None = None) -> str:
     return profile.video_grammar
 
 
+def _video_command_grammar(model: str, profile: ModelProfile | None = None) -> str:
+    profile = profile or get_profile(model)
+    grammar = _video_grammar(model, profile)
+    if grammar == "H66A0-video" and profile.command_grammar in {"H6099", "H6199"}:
+        return profile.command_grammar
+    return grammar
+
+
 def build_white_balance_query(model: str, *, profile: ModelProfile | None = None) -> bytes:
     profile = profile or get_profile(model)
     if not profile.supports_white_balance_readback or not profile.can_read(ReadDomain.DISPLAY_SETTING):
@@ -1381,7 +1453,7 @@ def build_blank_screen_query(model: str, *, profile: ModelProfile | None = None)
     profile = profile or get_profile(model)
     if not profile.supports_blank_screen:
         raise ValueError(f"{model} does not support blank-screen detection")
-    if (grammar := _video_grammar(model, profile)) in {"H6099", "H6199"}:
+    if (grammar := _video_command_grammar(model, profile)) in {"H6099", "H6199"}:
         return _build_status_query("display_setting", grammar, display_setting="blank_screen")
     raise ValueError(f"{model} has no generated blank-screen query grammar")
 
@@ -1390,7 +1462,7 @@ def build_relative_brightness_query(model: str, *, profile: ModelProfile | None 
     profile = profile or get_profile(model)
     if not profile.supports_relative_brightness:
         raise ValueError(f"{model} does not support relative brightness")
-    if (grammar := _video_grammar(model, profile)) in {"H6099", "H6199"}:
+    if (grammar := _video_command_grammar(model, profile)) in {"H6099", "H6199"}:
         return _build_status_query("relative_brightness", grammar)
     raise ValueError(f"{model} has no generated relative-brightness query grammar")
 
@@ -1412,7 +1484,9 @@ def build_black_border_query(model: str, *, profile: ModelProfile | None = None)
     profile = profile or get_profile(model)
     if not profile.supports_black_border:
         raise ValueError(f"{model} does not support black-border removal")
-    return _build_status_query("display_setting", _video_grammar(model, profile), display_setting="black_border")
+    return _build_status_query(
+        "display_setting", _video_command_grammar(model, profile), display_setting="black_border"
+    )
 
 
 def build_segment_query(group: int, model: str = "H617A", *, profile: ModelProfile | None = None) -> bytes:
@@ -2244,7 +2318,7 @@ def build_white_balance(red: int, blue: int | None, model: str, *, flag: int = 1
     profile = get_profile(model)
     if not profile.supports_white_balance:
         raise ValueError(f"{model} does not support white balance")
-    if (grammar := _video_grammar(model)) not in {"H6099", "H6199"}:
+    if (grammar := _video_command_grammar(model, profile)) not in {"H6099", "H6199"}:
         raise ValueError(f"{model} has no generated white-balance grammar")
     root_type = _COMMAND_ROOTS[grammar][1]
     root = root_type()
@@ -2293,7 +2367,7 @@ def build_blank_screen(
         for value in (low_brightness_duration_seconds, same_tone_duration_seconds)
     ):
         raise ValueError("blank-screen durations must be integer seconds in 0..65535")
-    if (grammar := _video_grammar(model)) not in {"H6099", "H6199"}:
+    if (grammar := _video_command_grammar(model, profile)) not in {"H6099", "H6199"}:
         raise ValueError(f"{model} has no generated blank-screen grammar")
     root_type = _COMMAND_ROOTS[grammar][1]
     root = root_type()
@@ -2315,11 +2389,12 @@ def build_blank_screen(
 
 
 def build_black_border(enabled: bool, model: str) -> bytes:
-    if not get_profile(model).supports_black_border:
+    profile = get_profile(model)
+    if not profile.supports_black_border:
         raise ValueError(f"{model} does not support black-border removal")
     if type(enabled) is not bool:
         raise ValueError("black-border removal requires a boolean")
-    grammar = _video_grammar(model)
+    grammar = _video_command_grammar(model, profile)
     if grammar != "H6099":
         raise ValueError(f"{model} has no generated black-border grammar")
     root_type = _COMMAND_ROOTS[grammar][1]
@@ -2350,7 +2425,7 @@ def build_relative_brightness(
     profile = get_profile(model)
     if not profile.supports_relative_brightness:
         raise ValueError(f"{model} does not support relative brightness")
-    if (grammar := _video_grammar(model)) not in {"H6099", "H6199"}:
+    if (grammar := _video_command_grammar(model, profile)) not in {"H6099", "H6199"}:
         raise ValueError(f"{model} has no generated relative-brightness grammar")
     root_type = _COMMAND_ROOTS[grammar][1]
     root = root_type()
@@ -2427,17 +2502,20 @@ def build_music_mode(
         multi.sub_body = selector
         root.body = multi
         return _serialize_xor(root)
-    if resolved == "H7025":
-        root = H7025MusicWrite()
+    if resolved in {"H66A0", "H7025"}:
+        root_cls = H66a0MusicWrite if resolved == "H66A0" else H7025MusicWrite
+        root = root_cls()
         root.header, root.opcode, root.sub = b"\x33", b"\x05", b"\x13"
-        selector = _child(H7025MusicWrite.MusicSelector, root)
-        selector.mode_id = H7025MusicWrite.MusicMode(mode_id)
-        selector.sensitivity = sensitivity
+        selector = _child(root_cls.MusicSelector, root)
+        selector.mode_id = root_cls.MusicMode(mode_id)
+        selector.sensitivity = max(0, min(100, sensitivity)) if resolved == "H66A0" else sensitivity
         if selector.is_legacy:
             selector.style = int(calm)
             selector.has_fixed_colour = int(colour is not None)
             if colour is not None:
                 selector.rgb = _rgb(selector, *colour)
+        elif resolved == "H66A0" and colour is not None:
+            raise ValueError("new H66A0 music selectors omit fixed colour")
         selector.unknown_tail = bytes(14 - (2 + (3 if colour is not None else 0) if selector.is_legacy else 0))
         root.selector = selector
         return _serialize_xor(root)
@@ -2689,10 +2767,16 @@ def parse_music_parameters(variant: MusicVariant, body: bytes) -> Any:
     """Validate a complete retained body with the selected KSY, independent of authoring bounds."""
     if not isinstance(body, bytes) or not body or len(body) > 255 * 17 - 3:
         raise ValueError("invalid music body length")
-    if variant.layout == "h6099_music_parameters":
-        root_type = import_module(
-            "custom_components.ha_govee_led_ble.generated_protocol.h6099_music_parameters"
-        ).H6099MusicParameters
+    if variant.layout in {"h6099_music_parameters", "h66a0_music_parameters"}:
+        root_type = (
+            import_module(
+                "custom_components.ha_govee_led_ble.generated_protocol.h66a0_music_parameters"
+            ).H66a0MusicParameters
+            if variant.layout == "h66a0_music_parameters"
+            else import_module(
+                "custom_components.ha_govee_led_ble.generated_protocol.h6099_music_parameters"
+            ).H6099MusicParameters
+        )
         root = root_type.from_bytes(body)
     elif variant.layout in COMPANION_MUSIC_LAYOUTS:
         root_type = {
@@ -2719,7 +2803,7 @@ def encode_music_parameters(
     preserve_companions: bool = False,
 ) -> bytes:
     """Edit named Kaitai fields; palette length never becomes an absolute tail offset."""
-    if variant.layout == "h6099_music_parameters":
+    if variant.layout in {"h6099_music_parameters", "h66a0_music_parameters"}:
         return _encode_h6099_music_parameters(
             variant, parameters, palette, calm, physical_ic_count, preserve_companions
         )
@@ -2814,9 +2898,15 @@ def _encode_h6099_music_parameters(
 ) -> bytes:
     from math import ceil
 
-    root_type = import_module(
-        "custom_components.ha_govee_led_ble.generated_protocol.h6099_music_parameters"
-    ).H6099MusicParameters
+    root_type = (
+        import_module(
+            "custom_components.ha_govee_led_ble.generated_protocol.h66a0_music_parameters"
+        ).H66a0MusicParameters
+        if variant.layout == "h66a0_music_parameters"
+        else import_module(
+            "custom_components.ha_govee_led_ble.generated_protocol.h6099_music_parameters"
+        ).H6099MusicParameters
+    )
     root = root_type.from_bytes(variant.template)
     root._read()
     if root.mode != variant.mode_code or not variant.evidence:
@@ -2845,7 +2935,7 @@ def _encode_h6099_music_parameters(
     mode_enum = root_type.MusicMode
     if root.mode == mode_enum.bloom and calm is not None:
         tail.no_rhythm_speed, tail.rhythm_speed = 10, 20 if calm else 80
-    elif root.mode == mode_enum.shiny and calm is not None:
+    elif getattr(mode_enum, "shiny", None) is not None and root.mode == mode_enum.shiny and calm is not None:
         tail.minimum_brightness, tail.maximum_brightness = (20, 70) if calm else (5, 100)
     elif ic is not None:
         if root.mode == mode_enum.separation and (not preserve_companions or "gradient" in parameters):
@@ -2870,10 +2960,13 @@ def _encode_h6099_music_parameters(
             if not preserve_companions:
                 tail.speed = 80 if ic < 30 else 85
         elif root.mode == mode_enum.day_and_night and not preserve_companions:
-            tail.piece_count = max(1, ic // 2) if ic < 30 else ceil(ic * 7 / 50)
-            # MusicMode.d uses default subEffect[0] (piece) as speed and [1] (10/20) as fade.
-            tail.speed = max(1, min(50, tail.piece_count))
-            tail.gradient = 0
+            if not variant.parameters:
+                tail.piece_count = max(1, ic // 2) if ic < 30 else ceil(ic * 7 / 50)
+                # MusicMode.d uses default subEffect[0] (piece) as speed and [1] (10/20) as fade.
+                tail.speed = max(1, min(50, tail.piece_count))
+                tail.gradient = 0
+            elif "segment_count" not in parameters:
+                tail.piece_count = max(1, ic // 2) if ic < 30 else ceil(ic * 7 / 50)
     if any(
         type(value) is int and not 0 <= value <= 255 for key, value in vars(tail).items() if not key.startswith("_")
     ):

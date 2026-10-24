@@ -601,13 +601,18 @@ def test_every_declared_video_mode_can_be_built(hass, model: str, profile: Model
             root_type = _status_root_type(profile)
             color_mode_enum = _status_color_mode_enum(profile)
             video_byte = int(color_mode_enum.video)
-            source_code = int(root_type.VideoSource[mode])
-            region_code = int(root_type.VideoRegion.all)
-            body = (
-                bytes([video_byte, source_code, region_code, saturation, 1, 2, 50])
-                if profile.status_grammar == "H6099"
-                else bytes([video_byte, region_code, source_code, saturation, 1, 50])
-            )
+            if profile.video_grammar == "H66A0-video":
+                source_code = int(a.H66a0VideoCommand.VideoSource[mode])
+                preset_code = int(a.H66a0VideoCommand.PicturePreset[values["picture_preset"]])
+                body = bytes([video_byte, source_code, preset_code, saturation, 1, int(values["opaque"]), 50])
+            else:
+                source_code = int(root_type.VideoSource[mode])
+                region_code = int(root_type.VideoRegion.all)
+                body = (
+                    bytes([video_byte, source_code, region_code, saturation, 1, 2, 50])
+                    if profile.status_grammar == "H6099"
+                    else bytes([video_byte, region_code, source_code, saturation, 1, 50])
+                )
             reply = _status(0x05, body)
             decoded = decode_status_frame(reply, model, profile=profile)
             assert decoded is not None

@@ -218,7 +218,7 @@ def parse_color_mode(generated: Any, model: str, *, profile: ModelProfile | None
             color_temp_kelvin=int(raw_kelvin) if raw_kelvin is not None else None,
             multi_effect_flag=getattr(detail, "sub", None),
         )
-    if profile.status_grammar in {"H6099", "H6199"} or (
+    if profile.status_grammar in {"H6099", "H6199", "H66A0"} or (
         mode_name == "video" and profile.video_grammar in {"H6099", "H6199"}
     ):
         if mode_name == "video":
@@ -262,7 +262,7 @@ def parse_color_mode(generated: Any, model: str, *, profile: ModelProfile | None
                 mode=ParsedMode.MUSIC,
                 music_mode=music_mode,
                 music_sensitivity=int(detail.sensitivity),
-                music_calm=bool(detail.is_calm),
+                music_calm=bool(detail.is_calm) if music_mode == "rhythm" else None,
                 music_color=fixed_colour,
             )
         if mode_name == "scene":

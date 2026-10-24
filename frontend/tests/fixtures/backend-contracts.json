@@ -19521,6 +19521,1665 @@
           ],
           "workshop_templates": []
         },
+        "H66A0": {
+          "apply": {
+            "multi": "supported",
+            "painted": "supported",
+            "palette_diy": "unsupported",
+            "single": "supported",
+            "workshop": "unsupported"
+          },
+          "effects": [
+            {
+              "category": "single_layer",
+              "family": 0,
+              "id": "fade",
+              "label": "Fade",
+              "palette_max": 8,
+              "rate": "speed",
+              "rate_max": 100,
+              "rate_min": 1,
+              "supports_multi": true,
+              "variations": [
+                {
+                  "id": "0",
+                  "label": "Variation 1",
+                  "variant": 0
+                },
+                {
+                  "id": "1",
+                  "label": "Variation 2",
+                  "variant": 1
+                },
+                {
+                  "id": "2",
+                  "label": "Variation 3",
+                  "variant": 2
+                }
+              ]
+            }
+          ],
+          "limits": {
+            "brightness_max": 100,
+            "brightness_min": 0,
+            "multi_max": 4,
+            "music_sensitivity_max": 99,
+            "music_sensitivity_min": 0,
+            "palette_max": 8,
+            "palette_min": 1,
+            "speed_max": 100,
+            "speed_min": 0
+          },
+          "music_modes": [
+            {
+              "id": "energetic",
+              "label": "Energetic"
+            }
+          ],
+          "music_settings": {
+            "beat": {
+              "available": true,
+              "calm_default": false,
+              "colour": false,
+              "evidence": "H66A0 MusicModeH66A0.d / SubMusicModeConfig.makeJiePai",
+              "palette": {
+                "default": [
+                  [
+                    255,
+                    0,
+                    0
+                  ],
+                  [
+                    255,
+                    127,
+                    0
+                  ],
+                  [
+                    255,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    0,
+                    255
+                  ],
+                  [
+                    0,
+                    255,
+                    255
+                  ],
+                  [
+                    139,
+                    0,
+                    255
+                  ]
+                ],
+                "max": 8,
+                "min": 1
+              },
+              "palette_size": 7,
+              "parameters": {},
+              "style": false
+            },
+            "bloom": {
+              "available": true,
+              "calm_default": false,
+              "colour": false,
+              "evidence": "H66A0 MusicModeH66A0.d / RgbMusicZhanFang",
+              "palette": {
+                "default": [
+                  [
+                    255,
+                    0,
+                    0
+                  ],
+                  [
+                    255,
+                    127,
+                    0
+                  ],
+                  [
+                    255,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    0,
+                    255
+                  ],
+                  [
+                    0,
+                    255,
+                    255
+                  ],
+                  [
+                    139,
+                    0,
+                    255
+                  ]
+                ],
+                "max": 8,
+                "min": 1
+              },
+              "palette_size": 7,
+              "parameters": {},
+              "style": true
+            },
+            "day_and_night": {
+              "available": true,
+              "calm_default": false,
+              "colour": false,
+              "evidence": "H66A0 MusicModeH66A0.d case 55 / RgbicMusicZhouYe",
+              "palette": {
+                "default": [
+                  [
+                    255,
+                    0,
+                    0
+                  ],
+                  [
+                    255,
+                    127,
+                    0
+                  ],
+                  [
+                    255,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    0,
+                    255
+                  ],
+                  [
+                    0,
+                    255,
+                    255
+                  ],
+                  [
+                    139,
+                    0,
+                    255
+                  ]
+                ],
+                "max": 8,
+                "min": 1
+              },
+              "palette_size": 7,
+              "parameters": {
+                "gradient": {
+                  "default": false,
+                  "kind": "switch",
+                  "max": 0,
+                  "min": 0,
+                  "options": []
+                },
+                "segment_count": {
+                  "default": 13,
+                  "kind": "number",
+                  "max": 18,
+                  "min": 1,
+                  "options": []
+                },
+                "speed": {
+                  "default": 20,
+                  "kind": "number",
+                  "max": 50,
+                  "min": 1,
+                  "options": []
+                }
+              },
+              "style": false
+            },
+            "energetic": {
+              "available": true,
+              "calm_default": false,
+              "colour": true,
+              "evidence": "H6099 SubModeMusicV1 legacy Energetic selector; new-detail upload path unresolved",
+              "palette_size": 0,
+              "parameters": {},
+              "style": false
+            },
+            "flowing_light": {
+              "available": true,
+              "calm_default": false,
+              "colour": false,
+              "evidence": "H66A0 MusicModeH66A0.d / SubMusicModeConfig.makeFlowingLight",
+              "palette": {
+                "default": [
+                  [
+                    255,
+                    0,
+                    0
+                  ],
+                  [
+                    255,
+                    127,
+                    0
+                  ],
+                  [
+                    255,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    0,
+                    255
+                  ],
+                  [
+                    0,
+                    255,
+                    255
+                  ],
+                  [
+                    139,
+                    0,
+                    255
+                  ]
+                ],
+                "max": 8,
+                "min": 1
+              },
+              "palette_size": 7,
+              "parameters": {},
+              "style": false
+            },
+            "fountain": {
+              "available": true,
+              "calm_default": false,
+              "colour": false,
+              "evidence": "H66A0 MusicModeH66A0.d / RgbicMusicDuiJi",
+              "palette": {
+                "default": [
+                  [
+                    255,
+                    0,
+                    0
+                  ],
+                  [
+                    255,
+                    127,
+                    0
+                  ],
+                  [
+                    255,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    0,
+                    255
+                  ],
+                  [
+                    0,
+                    255,
+                    255
+                  ],
+                  [
+                    139,
+                    0,
+                    255
+                  ]
+                ],
+                "max": 8,
+                "min": 1
+              },
+              "palette_size": 7,
+              "parameters": {
+                "direction": {
+                  "default": "two_way",
+                  "kind": "select",
+                  "max": 0,
+                  "min": 0,
+                  "options": [
+                    "clockwise",
+                    "counterclockwise",
+                    "two_way"
+                  ]
+                }
+              },
+              "style": false
+            },
+            "hopping": {
+              "available": true,
+              "calm_default": false,
+              "colour": false,
+              "evidence": "H66A0 MusicModeH66A0.d / RgbicMusicYueDong; ColorUtils.toNoColor = RGB 1,1,1",
+              "palette": {
+                "default": [
+                  [
+                    255,
+                    0,
+                    0
+                  ],
+                  [
+                    255,
+                    127,
+                    0
+                  ],
+                  [
+                    255,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    0,
+                    255
+                  ],
+                  [
+                    0,
+                    255,
+                    255
+                  ],
+                  [
+                    139,
+                    0,
+                    255
+                  ]
+                ],
+                "max": 8,
+                "min": 1
+              },
+              "palette_size": 7,
+              "parameters": {
+                "background": {
+                  "default": 65793,
+                  "kind": "number",
+                  "max": 16777215,
+                  "min": 0,
+                  "options": []
+                },
+                "relative_brightness": {
+                  "default": 25,
+                  "kind": "number",
+                  "max": 50,
+                  "min": 0,
+                  "options": []
+                }
+              },
+              "style": false
+            },
+            "painting": {
+              "available": true,
+              "calm_default": false,
+              "colour": false,
+              "evidence": "H66A0 MusicModeH66A0.d / SubMusicModeConfig.makeCaihui",
+              "palette": {
+                "default": [
+                  [
+                    255,
+                    0,
+                    0
+                  ],
+                  [
+                    255,
+                    127,
+                    0
+                  ],
+                  [
+                    255,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    0,
+                    255
+                  ],
+                  [
+                    0,
+                    255,
+                    255
+                  ],
+                  [
+                    139,
+                    0,
+                    255
+                  ]
+                ],
+                "max": 8,
+                "min": 1
+              },
+              "palette_size": 7,
+              "parameters": {},
+              "style": false
+            },
+            "piano_keys": {
+              "available": true,
+              "calm_default": false,
+              "colour": false,
+              "evidence": "H66A0 MusicModeH66A0.d / RgbicMusicGangQinJian",
+              "palette": {
+                "default": [
+                  [
+                    255,
+                    0,
+                    0
+                  ],
+                  [
+                    255,
+                    127,
+                    0
+                  ],
+                  [
+                    255,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    0,
+                    255
+                  ],
+                  [
+                    0,
+                    255,
+                    255
+                  ],
+                  [
+                    139,
+                    0,
+                    255
+                  ]
+                ],
+                "max": 8,
+                "min": 1
+              },
+              "palette_size": 7,
+              "parameters": {
+                "gradient": {
+                  "default": false,
+                  "kind": "switch",
+                  "max": 0,
+                  "min": 0,
+                  "options": []
+                },
+                "key_count": {
+                  "default": 27,
+                  "kind": "number",
+                  "max": 54,
+                  "min": 9,
+                  "options": []
+                }
+              },
+              "style": false
+            },
+            "rhythm": {
+              "available": true,
+              "calm_default": false,
+              "colour": true,
+              "evidence": "H66A0 MusicModeH66A0.d Rhythm legacy selector",
+              "palette_size": 0,
+              "parameters": {},
+              "style": true
+            },
+            "rolling": {
+              "available": true,
+              "calm_default": false,
+              "colour": true,
+              "evidence": "H66A0 MusicModeH66A0.d Rolling legacy selector",
+              "palette_size": 0,
+              "parameters": {},
+              "style": false
+            },
+            "separation": {
+              "available": true,
+              "calm_default": false,
+              "colour": false,
+              "evidence": "H66A0 MusicModeH66A0.d / FenLi.Builder",
+              "palette": {
+                "default": [
+                  [
+                    255,
+                    0,
+                    0
+                  ],
+                  [
+                    255,
+                    127,
+                    0
+                  ],
+                  [
+                    255,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    0,
+                    255
+                  ],
+                  [
+                    0,
+                    255,
+                    255
+                  ],
+                  [
+                    139,
+                    0,
+                    255
+                  ]
+                ],
+                "max": 8,
+                "min": 1
+              },
+              "palette_size": 7,
+              "parameters": {
+                "gradient": {
+                  "default": false,
+                  "kind": "switch",
+                  "max": 0,
+                  "min": 0,
+                  "options": []
+                },
+                "point": {
+                  "default": 3,
+                  "kind": "number",
+                  "max": 5,
+                  "min": 1,
+                  "options": []
+                }
+              },
+              "style": false
+            },
+            "spectrum": {
+              "available": true,
+              "calm_default": false,
+              "colour": true,
+              "evidence": "H66A0 MusicModeH66A0.d Spectrum legacy selector",
+              "palette_size": 0,
+              "parameters": {},
+              "style": false
+            },
+            "splash": {
+              "available": true,
+              "calm_default": false,
+              "colour": false,
+              "evidence": "H66A0 MusicModeH66A0.d / SubMusicModeConfig.makeShuiHua",
+              "palette": {
+                "default": [
+                  [
+                    255,
+                    0,
+                    0
+                  ],
+                  [
+                    255,
+                    127,
+                    0
+                  ],
+                  [
+                    255,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    0,
+                    255
+                  ],
+                  [
+                    0,
+                    255,
+                    255
+                  ],
+                  [
+                    139,
+                    0,
+                    255
+                  ]
+                ],
+                "max": 8,
+                "min": 1
+              },
+              "palette_size": 7,
+              "parameters": {},
+              "style": false
+            },
+            "spring": {
+              "available": true,
+              "calm_default": false,
+              "colour": false,
+              "evidence": "H66A0 MusicModeH66A0.d / SubMusicModeConfig.O0",
+              "palette": {
+                "default": [
+                  [
+                    255,
+                    0,
+                    0
+                  ],
+                  [
+                    255,
+                    127,
+                    0
+                  ],
+                  [
+                    255,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    0,
+                    255
+                  ],
+                  [
+                    0,
+                    255,
+                    255
+                  ],
+                  [
+                    139,
+                    0,
+                    255
+                  ]
+                ],
+                "max": 8,
+                "min": 1
+              },
+              "palette_size": 7,
+              "parameters": {},
+              "style": false
+            },
+            "windmill": {
+              "available": true,
+              "calm_default": false,
+              "colour": false,
+              "evidence": "H66A0 MusicModeH66A0.d / SubMusicModeConfig.makeWindmill",
+              "palette": {
+                "default": [
+                  [
+                    255,
+                    0,
+                    0
+                  ],
+                  [
+                    255,
+                    127,
+                    0
+                  ],
+                  [
+                    255,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    0,
+                    255
+                  ],
+                  [
+                    0,
+                    255,
+                    255
+                  ],
+                  [
+                    139,
+                    0,
+                    255
+                  ]
+                ],
+                "max": 8,
+                "min": 2
+              },
+              "palette_size": 7,
+              "parameters": {},
+              "style": false
+            }
+          },
+          "painted_addressing": "physical_ic",
+          "painted_background": [
+            255,
+            255,
+            255
+          ],
+          "painted_effects": [
+            {
+              "id": "clockwise",
+              "label": "Clockwise"
+            }
+          ],
+          "sku": "H66A0",
+          "supports": {
+            "advanced": "unsupported",
+            "multi": "supported",
+            "workshop": "unsupported"
+          },
+          "templates": [
+            {
+              "category": "single-layer",
+              "content": {
+                "addressing": "physical_ic",
+                "background": [
+                  255,
+                  255,
+                  255
+                ],
+                "brightness": 100,
+                "effect": "clockwise",
+                "kind": "h617a_painted",
+                "segments": [
+                  null
+                ],
+                "speed": 50
+              },
+              "id": "template:paint",
+              "label": "Graffiti"
+            },
+            {
+              "category": "single-layer",
+              "content": {
+                "family": 0,
+                "kind": "h617a_single",
+                "palette": [
+                  [
+                    255,
+                    0,
+                    0
+                  ],
+                  [
+                    255,
+                    127,
+                    0
+                  ],
+                  [
+                    255,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    0,
+                    255
+                  ],
+                  [
+                    0,
+                    255,
+                    255
+                  ],
+                  [
+                    139,
+                    0,
+                    255
+                  ]
+                ],
+                "speed": 50,
+                "variant": 0
+              },
+              "id": "template:single:0:0",
+              "label": "Fade"
+            },
+            {
+              "category": "single-layer",
+              "content": {
+                "family": 1,
+                "kind": "h617a_single",
+                "palette": [
+                  [
+                    255,
+                    0,
+                    0
+                  ],
+                  [
+                    255,
+                    127,
+                    0
+                  ],
+                  [
+                    255,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    0,
+                    255
+                  ],
+                  [
+                    0,
+                    255,
+                    255
+                  ],
+                  [
+                    139,
+                    0,
+                    255
+                  ]
+                ],
+                "speed": 50,
+                "variant": 0
+              },
+              "id": "template:single:1:0",
+              "label": "Jumping"
+            },
+            {
+              "category": "single-layer",
+              "content": {
+                "family": 2,
+                "kind": "h617a_single",
+                "palette": [
+                  [
+                    255,
+                    0,
+                    0
+                  ],
+                  [
+                    255,
+                    127,
+                    0
+                  ],
+                  [
+                    255,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    0,
+                    255
+                  ],
+                  [
+                    0,
+                    255,
+                    255
+                  ],
+                  [
+                    139,
+                    0,
+                    255
+                  ]
+                ],
+                "speed": 50,
+                "variant": 0
+              },
+              "id": "template:single:2:0",
+              "label": "Blinking"
+            },
+            {
+              "category": "single-layer",
+              "content": {
+                "family": 3,
+                "kind": "h617a_single",
+                "palette": [
+                  [
+                    255,
+                    0,
+                    0
+                  ],
+                  [
+                    255,
+                    127,
+                    0
+                  ],
+                  [
+                    255,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    0,
+                    255
+                  ],
+                  [
+                    0,
+                    255,
+                    255
+                  ],
+                  [
+                    139,
+                    0,
+                    255
+                  ]
+                ],
+                "speed": 50,
+                "variant": 3
+              },
+              "id": "template:single:3:3",
+              "label": "Marquee"
+            },
+            {
+              "category": "single-layer",
+              "content": {
+                "family": 8,
+                "kind": "h617a_single",
+                "palette": [
+                  [
+                    255,
+                    0,
+                    0
+                  ],
+                  [
+                    255,
+                    127,
+                    0
+                  ],
+                  [
+                    255,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    0,
+                    255
+                  ],
+                  [
+                    0,
+                    255,
+                    255
+                  ],
+                  [
+                    139,
+                    0,
+                    255
+                  ]
+                ],
+                "speed": 50,
+                "variant": 9
+              },
+              "id": "template:single:8:9",
+              "label": "Stream"
+            },
+            {
+              "category": "single-layer",
+              "content": {
+                "family": 9,
+                "kind": "h617a_single",
+                "palette": [
+                  [
+                    255,
+                    0,
+                    0
+                  ],
+                  [
+                    255,
+                    127,
+                    0
+                  ],
+                  [
+                    255,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    0,
+                    255
+                  ],
+                  [
+                    0,
+                    255,
+                    255
+                  ],
+                  [
+                    139,
+                    0,
+                    255
+                  ]
+                ],
+                "speed": 50,
+                "variant": 9
+              },
+              "id": "template:single:9:9",
+              "label": "Flow"
+            },
+            {
+              "category": "single-layer",
+              "content": {
+                "family": 10,
+                "kind": "h617a_single",
+                "palette": [
+                  [
+                    255,
+                    0,
+                    0
+                  ],
+                  [
+                    0,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    0,
+                    255
+                  ]
+                ],
+                "speed": 50,
+                "variant": 0
+              },
+              "id": "template:single:10:0",
+              "label": "Chase"
+            },
+            {
+              "category": "single-layer",
+              "content": {
+                "family": 37,
+                "kind": "h617a_single",
+                "palette": [
+                  [
+                    255,
+                    0,
+                    0
+                  ],
+                  [
+                    255,
+                    127,
+                    0
+                  ],
+                  [
+                    255,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    0,
+                    255
+                  ],
+                  [
+                    0,
+                    255,
+                    255
+                  ],
+                  [
+                    139,
+                    0,
+                    255
+                  ]
+                ],
+                "speed": 50,
+                "variant": 0
+              },
+              "id": "template:single:37:0",
+              "label": "Fill"
+            },
+            {
+              "category": "single-layer",
+              "content": {
+                "family": 38,
+                "kind": "h617a_single",
+                "palette": [
+                  [
+                    255,
+                    0,
+                    0
+                  ],
+                  [
+                    255,
+                    127,
+                    0
+                  ],
+                  [
+                    255,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    0,
+                    255
+                  ],
+                  [
+                    0,
+                    255,
+                    255
+                  ],
+                  [
+                    139,
+                    0,
+                    255
+                  ]
+                ],
+                "speed": 50,
+                "variant": 0
+              },
+              "id": "template:single:38:0",
+              "label": "Confrontation"
+            },
+            {
+              "category": "single-layer",
+              "content": {
+                "family": 39,
+                "kind": "h617a_single",
+                "palette": [
+                  [
+                    255,
+                    0,
+                    0
+                  ],
+                  [
+                    255,
+                    127,
+                    0
+                  ],
+                  [
+                    255,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    0,
+                    255
+                  ],
+                  [
+                    0,
+                    255,
+                    255
+                  ],
+                  [
+                    139,
+                    0,
+                    255
+                  ]
+                ],
+                "speed": 50,
+                "variant": 0
+              },
+              "id": "template:single:39:0",
+              "label": "Stretch"
+            },
+            {
+              "category": "single-layer",
+              "content": {
+                "family": 40,
+                "kind": "h617a_single",
+                "palette": [
+                  [
+                    255,
+                    0,
+                    0
+                  ],
+                  [
+                    255,
+                    127,
+                    0
+                  ],
+                  [
+                    255,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    0,
+                    255
+                  ],
+                  [
+                    0,
+                    255,
+                    255
+                  ],
+                  [
+                    139,
+                    0,
+                    255
+                  ]
+                ],
+                "speed": 50,
+                "variant": 0
+              },
+              "id": "template:single:40:0",
+              "label": "Halo Dyeing"
+            },
+            {
+              "category": "music",
+              "content": {
+                "calm": null,
+                "colour": null,
+                "kind": "music_profile",
+                "mode": "energetic",
+                "model": "H66A0",
+                "parameters": {},
+                "sensitivity": 99
+              },
+              "id": "template:music:energetic",
+              "label": "Energetic"
+            },
+            {
+              "category": "music",
+              "content": {
+                "calm": false,
+                "colour": null,
+                "kind": "music_profile",
+                "mode": "rhythm",
+                "model": "H66A0",
+                "parameters": {},
+                "sensitivity": 99
+              },
+              "id": "template:music:rhythm",
+              "label": "Rhythm"
+            },
+            {
+              "category": "music",
+              "content": {
+                "calm": null,
+                "colour": null,
+                "kind": "music_profile",
+                "mode": "spectrum",
+                "model": "H66A0",
+                "parameters": {},
+                "sensitivity": 99
+              },
+              "id": "template:music:spectrum",
+              "label": "Spectrum"
+            },
+            {
+              "category": "music",
+              "content": {
+                "calm": null,
+                "colour": null,
+                "kind": "music_profile",
+                "mode": "rolling",
+                "model": "H66A0",
+                "parameters": {},
+                "sensitivity": 99
+              },
+              "id": "template:music:rolling",
+              "label": "Rolling"
+            },
+            {
+              "category": "music",
+              "content": {
+                "calm": null,
+                "colour": null,
+                "kind": "music_profile",
+                "mode": "separation",
+                "model": "H66A0",
+                "parameters": {},
+                "sensitivity": 99
+              },
+              "id": "template:music:separation",
+              "label": "Separation"
+            },
+            {
+              "category": "music",
+              "content": {
+                "calm": null,
+                "colour": null,
+                "kind": "music_profile",
+                "mode": "hopping",
+                "model": "H66A0",
+                "parameters": {},
+                "sensitivity": 99
+              },
+              "id": "template:music:hopping",
+              "label": "Hopping"
+            },
+            {
+              "category": "music",
+              "content": {
+                "calm": null,
+                "colour": null,
+                "kind": "music_profile",
+                "mode": "piano_keys",
+                "model": "H66A0",
+                "parameters": {},
+                "sensitivity": 99
+              },
+              "id": "template:music:piano_keys",
+              "label": "Piano Keys"
+            },
+            {
+              "category": "music",
+              "content": {
+                "calm": null,
+                "colour": null,
+                "kind": "music_profile",
+                "mode": "fountain",
+                "model": "H66A0",
+                "parameters": {},
+                "sensitivity": 99
+              },
+              "id": "template:music:fountain",
+              "label": "Fountain"
+            },
+            {
+              "category": "music",
+              "content": {
+                "calm": null,
+                "colour": null,
+                "kind": "music_profile",
+                "mode": "day_and_night",
+                "model": "H66A0",
+                "parameters": {},
+                "sensitivity": 99
+              },
+              "id": "template:music:day_and_night",
+              "label": "Day And Night"
+            },
+            {
+              "category": "music",
+              "content": {
+                "calm": false,
+                "colour": null,
+                "kind": "music_profile",
+                "mode": "bloom",
+                "model": "H66A0",
+                "parameters": {},
+                "sensitivity": 99
+              },
+              "id": "template:music:bloom",
+              "label": "Bloom"
+            },
+            {
+              "category": "music",
+              "content": {
+                "calm": null,
+                "colour": null,
+                "kind": "music_profile",
+                "mode": "splash",
+                "model": "H66A0",
+                "parameters": {},
+                "sensitivity": 99
+              },
+              "id": "template:music:splash",
+              "label": "Splash"
+            },
+            {
+              "category": "music",
+              "content": {
+                "calm": null,
+                "colour": null,
+                "kind": "music_profile",
+                "mode": "spring",
+                "model": "H66A0",
+                "parameters": {},
+                "sensitivity": 99
+              },
+              "id": "template:music:spring",
+              "label": "Spring"
+            },
+            {
+              "category": "music",
+              "content": {
+                "calm": null,
+                "colour": null,
+                "kind": "music_profile",
+                "mode": "painting",
+                "model": "H66A0",
+                "parameters": {},
+                "sensitivity": 99
+              },
+              "id": "template:music:painting",
+              "label": "Painting"
+            },
+            {
+              "category": "music",
+              "content": {
+                "calm": null,
+                "colour": null,
+                "kind": "music_profile",
+                "mode": "beat",
+                "model": "H66A0",
+                "parameters": {},
+                "sensitivity": 99
+              },
+              "id": "template:music:beat",
+              "label": "Beat"
+            },
+            {
+              "category": "music",
+              "content": {
+                "calm": null,
+                "colour": null,
+                "kind": "music_profile",
+                "mode": "windmill",
+                "model": "H66A0",
+                "parameters": {},
+                "sensitivity": 99
+              },
+              "id": "template:music:windmill",
+              "label": "Windmill"
+            },
+            {
+              "category": "music",
+              "content": {
+                "calm": null,
+                "colour": null,
+                "kind": "music_profile",
+                "mode": "flowing_light",
+                "model": "H66A0",
+                "parameters": {},
+                "sensitivity": 99
+              },
+              "id": "template:music:flowing_light",
+              "label": "Flowing Light"
+            },
+            {
+              "category": "video",
+              "content": {
+                "blank_screen": false,
+                "full_screen": null,
+                "kind": "video_profile",
+                "mode": "movie",
+                "model": "H66A0",
+                "relative_brightness": {
+                  "bottom": 100,
+                  "left": 100,
+                  "right": 100,
+                  "top": 100
+                },
+                "saturation": 100,
+                "sound_effects": false,
+                "sound_effects_softness": 50,
+                "white_balance_position": null,
+                "white_balance_value": 50
+              },
+              "id": "template:video:movie",
+              "label": "Movie"
+            },
+            {
+              "category": "video",
+              "content": {
+                "blank_screen": false,
+                "full_screen": null,
+                "kind": "video_profile",
+                "mode": "game",
+                "model": "H66A0",
+                "relative_brightness": {
+                  "bottom": 100,
+                  "left": 100,
+                  "right": 100,
+                  "top": 100
+                },
+                "saturation": 100,
+                "sound_effects": false,
+                "sound_effects_softness": 50,
+                "white_balance_position": null,
+                "white_balance_value": 50
+              },
+              "id": "template:video:game",
+              "label": "Game"
+            }
+          ],
+          "video_controls": {
+            "brightness_zones": [
+              "left",
+              "top",
+              "right",
+              "bottom"
+            ],
+            "saturation_min": 1,
+            "white_balance": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "representation": "scalar"
+            }
+          },
+          "video_modes": [
+            {
+              "id": "movie",
+              "label": "Movie"
+            }
+          ],
+          "video_settings": [
+            "saturation",
+            "sound_effects",
+            "white_balance",
+            "relative_brightness",
+            "blank_screen",
+            "black_border"
+          ],
+          "workflows": [
+            {
+              "application": "home_assistant",
+              "content_kind": "h617a_painted",
+              "id": "painted",
+              "label": "Graffiti"
+            },
+            {
+              "application": "home_assistant",
+              "content_kind": "h617a_single",
+              "id": "single",
+              "label": "Basic"
+            },
+            {
+              "application": "home_assistant",
+              "content_kind": "h617a_multi",
+              "id": "multi",
+              "label": "Mixed"
+            },
+            {
+              "application": "studio",
+              "content_kind": "scene_builtin",
+              "id": "native_scenes",
+              "label": "Scenes"
+            },
+            {
+              "application": "home_assistant",
+              "content_kind": "music_profile",
+              "id": "native_music",
+              "label": "Music"
+            },
+            {
+              "application": "home_assistant",
+              "content_kind": "video_profile",
+              "id": "video",
+              "label": "Video"
+            }
+          ],
+          "workshop_templates": []
+        },
         "H7020": {
           "advanced_create": false,
           "apply": {
@@ -30115,6 +31774,2820 @@
         "preview_health": {
           "checked_at": "2026-08-17T00:00:00Z",
           "config_entry_id": "h6099-main",
+          "error_code": null,
+          "error_message": null,
+          "incident_id": null,
+          "phase": "healthy",
+          "revision": 1,
+          "write_disposition": "completed"
+        },
+        "profiles": {
+          "music": "supported",
+          "video": "supported"
+        },
+        "readback": "diy_code_only",
+        "segment_count": 14,
+        "static_composition": true,
+        "support_quality": "experimental"
+      },
+      {
+        "active_state": null,
+        "catalogue": {
+          "apply": {
+            "multi": "supported",
+            "painted": "supported",
+            "palette_diy": "unsupported",
+            "single": "supported",
+            "workshop": "unsupported"
+          },
+          "effects": [
+            {
+              "category": "single_layer",
+              "family": 0,
+              "id": "fade",
+              "label": "Fade",
+              "palette_max": 8,
+              "rate": "speed",
+              "rate_max": 100,
+              "rate_min": 1,
+              "supports_multi": true,
+              "variations": [
+                {
+                  "id": "0",
+                  "label": "Variation 1",
+                  "variant": 0
+                },
+                {
+                  "id": "1",
+                  "label": "Variation 2",
+                  "variant": 1
+                },
+                {
+                  "id": "2",
+                  "label": "Variation 3",
+                  "variant": 2
+                }
+              ]
+            },
+            {
+              "category": "single_layer",
+              "family": 1,
+              "id": "jumping",
+              "label": "Jumping",
+              "palette_max": 8,
+              "rate": "speed",
+              "rate_max": 100,
+              "rate_min": 1,
+              "supports_multi": true,
+              "variations": [
+                {
+                  "id": "0",
+                  "label": "Variation 1",
+                  "variant": 0
+                },
+                {
+                  "id": "2",
+                  "label": "Variation 2",
+                  "variant": 2
+                }
+              ]
+            },
+            {
+              "category": "single_layer",
+              "family": 2,
+              "id": "blinking",
+              "label": "Blinking",
+              "palette_max": 8,
+              "rate": "speed",
+              "rate_max": 100,
+              "rate_min": 1,
+              "supports_multi": true,
+              "variations": [
+                {
+                  "id": "0",
+                  "label": "Variation 1",
+                  "variant": 0
+                },
+                {
+                  "id": "1",
+                  "label": "Variation 2",
+                  "variant": 1
+                },
+                {
+                  "id": "2",
+                  "label": "Variation 3",
+                  "variant": 2
+                }
+              ]
+            },
+            {
+              "category": "single_layer",
+              "family": 3,
+              "id": "marquee",
+              "label": "Marquee",
+              "palette_max": 8,
+              "rate": "speed",
+              "rate_max": 100,
+              "rate_min": 1,
+              "supports_multi": true,
+              "variations": [
+                {
+                  "id": "3",
+                  "label": "Variation 1",
+                  "variant": 3
+                },
+                {
+                  "id": "4",
+                  "label": "Variation 2",
+                  "variant": 4
+                },
+                {
+                  "id": "5",
+                  "label": "Variation 3",
+                  "variant": 5
+                }
+              ]
+            },
+            {
+              "category": "single_layer",
+              "family": 8,
+              "id": "stream",
+              "label": "Stream",
+              "palette_max": 8,
+              "rate": "speed",
+              "rate_max": 100,
+              "rate_min": 1,
+              "supports_multi": true,
+              "variations": [
+                {
+                  "id": "9",
+                  "label": "Variation 1",
+                  "variant": 9
+                },
+                {
+                  "id": "10",
+                  "label": "Variation 2",
+                  "variant": 10
+                }
+              ]
+            },
+            {
+              "category": "single_layer",
+              "family": 9,
+              "id": "flow",
+              "label": "Flow",
+              "palette_max": 8,
+              "rate": "speed",
+              "rate_max": 100,
+              "rate_min": 1,
+              "supports_multi": true,
+              "variations": [
+                {
+                  "id": "9",
+                  "label": "Variation 1",
+                  "variant": 9
+                },
+                {
+                  "id": "10",
+                  "label": "Variation 2",
+                  "variant": 10
+                }
+              ]
+            },
+            {
+              "category": "single_layer",
+              "family": 10,
+              "id": "chase",
+              "label": "Chase",
+              "palette_max": 3,
+              "rate": "speed",
+              "rate_max": 100,
+              "rate_min": 1,
+              "supports_multi": false,
+              "variations": [
+                {
+                  "id": "0",
+                  "label": "Variation 1",
+                  "variant": 0
+                }
+              ]
+            },
+            {
+              "category": "single_layer",
+              "family": 37,
+              "id": "fill",
+              "label": "Fill",
+              "palette_max": 8,
+              "rate": "speed",
+              "rate_max": 100,
+              "rate_min": 1,
+              "supports_multi": false,
+              "variations": [
+                {
+                  "id": "0",
+                  "label": "Variation 1",
+                  "variant": 0
+                }
+              ]
+            },
+            {
+              "category": "single_layer",
+              "family": 38,
+              "id": "confrontation",
+              "label": "Confrontation",
+              "palette_max": 8,
+              "rate": "speed",
+              "rate_max": 100,
+              "rate_min": 1,
+              "supports_multi": false,
+              "variations": [
+                {
+                  "id": "0",
+                  "label": "Variation 1",
+                  "variant": 0
+                },
+                {
+                  "id": "1",
+                  "label": "Variation 2",
+                  "variant": 1
+                }
+              ]
+            },
+            {
+              "category": "single_layer",
+              "family": 39,
+              "id": "stretch",
+              "label": "Stretch",
+              "palette_max": 8,
+              "rate": "speed",
+              "rate_max": 100,
+              "rate_min": 1,
+              "supports_multi": false,
+              "variations": [
+                {
+                  "id": "0",
+                  "label": "Variation 1",
+                  "variant": 0
+                }
+              ]
+            },
+            {
+              "category": "single_layer",
+              "family": 40,
+              "id": "halo_dyeing",
+              "label": "Halo Dyeing",
+              "palette_max": 8,
+              "rate": "speed",
+              "rate_max": 100,
+              "rate_min": 1,
+              "supports_multi": false,
+              "variations": [
+                {
+                  "id": "0",
+                  "label": "Variation 1",
+                  "variant": 0
+                },
+                {
+                  "id": "1",
+                  "label": "Variation 2",
+                  "variant": 1
+                }
+              ]
+            }
+          ],
+          "limits": {
+            "brightness_max": 100,
+            "brightness_min": 0,
+            "multi_max": 4,
+            "music_sensitivity_max": 99,
+            "music_sensitivity_min": 0,
+            "palette_max": 8,
+            "palette_min": 1,
+            "speed_max": 100,
+            "speed_min": 0
+          },
+          "music_modes": [
+            {
+              "id": "energetic",
+              "label": "Energetic"
+            },
+            {
+              "id": "rhythm",
+              "label": "Rhythm"
+            },
+            {
+              "id": "spectrum",
+              "label": "Spectrum"
+            },
+            {
+              "id": "rolling",
+              "label": "Rolling"
+            },
+            {
+              "id": "separation",
+              "label": "Separation"
+            },
+            {
+              "id": "hopping",
+              "label": "Hopping"
+            },
+            {
+              "id": "piano_keys",
+              "label": "Piano Keys"
+            },
+            {
+              "id": "fountain",
+              "label": "Fountain"
+            },
+            {
+              "id": "day_and_night",
+              "label": "Day And Night"
+            },
+            {
+              "id": "bloom",
+              "label": "Bloom"
+            },
+            {
+              "id": "splash",
+              "label": "Splash"
+            },
+            {
+              "id": "spring",
+              "label": "Spring"
+            },
+            {
+              "id": "painting",
+              "label": "Painting"
+            },
+            {
+              "id": "beat",
+              "label": "Beat"
+            },
+            {
+              "id": "windmill",
+              "label": "Windmill"
+            },
+            {
+              "id": "flowing_light",
+              "label": "Flowing Light"
+            }
+          ],
+          "music_settings": {
+            "beat": {
+              "available": true,
+              "calm_default": false,
+              "colour": false,
+              "evidence": "H66A0 MusicModeH66A0.d / SubMusicModeConfig.makeJiePai",
+              "palette": {
+                "default": [
+                  [
+                    255,
+                    0,
+                    0
+                  ],
+                  [
+                    255,
+                    127,
+                    0
+                  ],
+                  [
+                    255,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    0,
+                    255
+                  ],
+                  [
+                    0,
+                    255,
+                    255
+                  ],
+                  [
+                    139,
+                    0,
+                    255
+                  ]
+                ],
+                "max": 8,
+                "min": 1
+              },
+              "palette_size": 7,
+              "parameters": {},
+              "style": false
+            },
+            "bloom": {
+              "available": true,
+              "calm_default": false,
+              "colour": false,
+              "evidence": "H66A0 MusicModeH66A0.d / RgbMusicZhanFang",
+              "palette": {
+                "default": [
+                  [
+                    255,
+                    0,
+                    0
+                  ],
+                  [
+                    255,
+                    127,
+                    0
+                  ],
+                  [
+                    255,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    0,
+                    255
+                  ],
+                  [
+                    0,
+                    255,
+                    255
+                  ],
+                  [
+                    139,
+                    0,
+                    255
+                  ]
+                ],
+                "max": 8,
+                "min": 1
+              },
+              "palette_size": 7,
+              "parameters": {},
+              "style": true
+            },
+            "day_and_night": {
+              "available": true,
+              "calm_default": false,
+              "colour": false,
+              "evidence": "H66A0 MusicModeH66A0.d case 55 / RgbicMusicZhouYe",
+              "palette": {
+                "default": [
+                  [
+                    255,
+                    0,
+                    0
+                  ],
+                  [
+                    255,
+                    127,
+                    0
+                  ],
+                  [
+                    255,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    0,
+                    255
+                  ],
+                  [
+                    0,
+                    255,
+                    255
+                  ],
+                  [
+                    139,
+                    0,
+                    255
+                  ]
+                ],
+                "max": 8,
+                "min": 1
+              },
+              "palette_size": 7,
+              "parameters": {
+                "gradient": {
+                  "default": false,
+                  "kind": "switch",
+                  "max": 0,
+                  "min": 0,
+                  "options": []
+                },
+                "segment_count": {
+                  "default": 13,
+                  "kind": "number",
+                  "max": 18,
+                  "min": 1,
+                  "options": []
+                },
+                "speed": {
+                  "default": 20,
+                  "kind": "number",
+                  "max": 50,
+                  "min": 1,
+                  "options": []
+                }
+              },
+              "style": false
+            },
+            "energetic": {
+              "available": true,
+              "calm_default": false,
+              "colour": true,
+              "evidence": "H6099 SubModeMusicV1 legacy Energetic selector; new-detail upload path unresolved",
+              "palette_size": 0,
+              "parameters": {},
+              "style": false
+            },
+            "flowing_light": {
+              "available": true,
+              "calm_default": false,
+              "colour": false,
+              "evidence": "H66A0 MusicModeH66A0.d / SubMusicModeConfig.makeFlowingLight",
+              "palette": {
+                "default": [
+                  [
+                    255,
+                    0,
+                    0
+                  ],
+                  [
+                    255,
+                    127,
+                    0
+                  ],
+                  [
+                    255,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    0,
+                    255
+                  ],
+                  [
+                    0,
+                    255,
+                    255
+                  ],
+                  [
+                    139,
+                    0,
+                    255
+                  ]
+                ],
+                "max": 8,
+                "min": 1
+              },
+              "palette_size": 7,
+              "parameters": {},
+              "style": false
+            },
+            "fountain": {
+              "available": true,
+              "calm_default": false,
+              "colour": false,
+              "evidence": "H66A0 MusicModeH66A0.d / RgbicMusicDuiJi",
+              "palette": {
+                "default": [
+                  [
+                    255,
+                    0,
+                    0
+                  ],
+                  [
+                    255,
+                    127,
+                    0
+                  ],
+                  [
+                    255,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    0,
+                    255
+                  ],
+                  [
+                    0,
+                    255,
+                    255
+                  ],
+                  [
+                    139,
+                    0,
+                    255
+                  ]
+                ],
+                "max": 8,
+                "min": 1
+              },
+              "palette_size": 7,
+              "parameters": {
+                "direction": {
+                  "default": "two_way",
+                  "kind": "select",
+                  "max": 0,
+                  "min": 0,
+                  "options": [
+                    "clockwise",
+                    "counterclockwise",
+                    "two_way"
+                  ]
+                }
+              },
+              "style": false
+            },
+            "hopping": {
+              "available": true,
+              "calm_default": false,
+              "colour": false,
+              "evidence": "H66A0 MusicModeH66A0.d / RgbicMusicYueDong; ColorUtils.toNoColor = RGB 1,1,1",
+              "palette": {
+                "default": [
+                  [
+                    255,
+                    0,
+                    0
+                  ],
+                  [
+                    255,
+                    127,
+                    0
+                  ],
+                  [
+                    255,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    0,
+                    255
+                  ],
+                  [
+                    0,
+                    255,
+                    255
+                  ],
+                  [
+                    139,
+                    0,
+                    255
+                  ]
+                ],
+                "max": 8,
+                "min": 1
+              },
+              "palette_size": 7,
+              "parameters": {
+                "background": {
+                  "default": 65793,
+                  "kind": "number",
+                  "max": 16777215,
+                  "min": 0,
+                  "options": []
+                },
+                "relative_brightness": {
+                  "default": 25,
+                  "kind": "number",
+                  "max": 50,
+                  "min": 0,
+                  "options": []
+                }
+              },
+              "style": false
+            },
+            "painting": {
+              "available": true,
+              "calm_default": false,
+              "colour": false,
+              "evidence": "H66A0 MusicModeH66A0.d / SubMusicModeConfig.makeCaihui",
+              "palette": {
+                "default": [
+                  [
+                    255,
+                    0,
+                    0
+                  ],
+                  [
+                    255,
+                    127,
+                    0
+                  ],
+                  [
+                    255,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    0,
+                    255
+                  ],
+                  [
+                    0,
+                    255,
+                    255
+                  ],
+                  [
+                    139,
+                    0,
+                    255
+                  ]
+                ],
+                "max": 8,
+                "min": 1
+              },
+              "palette_size": 7,
+              "parameters": {},
+              "style": false
+            },
+            "piano_keys": {
+              "available": true,
+              "calm_default": false,
+              "colour": false,
+              "evidence": "H66A0 MusicModeH66A0.d / RgbicMusicGangQinJian",
+              "palette": {
+                "default": [
+                  [
+                    255,
+                    0,
+                    0
+                  ],
+                  [
+                    255,
+                    127,
+                    0
+                  ],
+                  [
+                    255,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    0,
+                    255
+                  ],
+                  [
+                    0,
+                    255,
+                    255
+                  ],
+                  [
+                    139,
+                    0,
+                    255
+                  ]
+                ],
+                "max": 8,
+                "min": 1
+              },
+              "palette_size": 7,
+              "parameters": {
+                "gradient": {
+                  "default": false,
+                  "kind": "switch",
+                  "max": 0,
+                  "min": 0,
+                  "options": []
+                },
+                "key_count": {
+                  "default": 27,
+                  "kind": "number",
+                  "max": 54,
+                  "min": 9,
+                  "options": []
+                }
+              },
+              "style": false
+            },
+            "rhythm": {
+              "available": true,
+              "calm_default": false,
+              "colour": true,
+              "evidence": "H66A0 MusicModeH66A0.d Rhythm legacy selector",
+              "palette_size": 0,
+              "parameters": {},
+              "style": true
+            },
+            "rolling": {
+              "available": true,
+              "calm_default": false,
+              "colour": true,
+              "evidence": "H66A0 MusicModeH66A0.d Rolling legacy selector",
+              "palette_size": 0,
+              "parameters": {},
+              "style": false
+            },
+            "separation": {
+              "available": true,
+              "calm_default": false,
+              "colour": false,
+              "evidence": "H66A0 MusicModeH66A0.d / FenLi.Builder",
+              "palette": {
+                "default": [
+                  [
+                    255,
+                    0,
+                    0
+                  ],
+                  [
+                    255,
+                    127,
+                    0
+                  ],
+                  [
+                    255,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    0,
+                    255
+                  ],
+                  [
+                    0,
+                    255,
+                    255
+                  ],
+                  [
+                    139,
+                    0,
+                    255
+                  ]
+                ],
+                "max": 8,
+                "min": 1
+              },
+              "palette_size": 7,
+              "parameters": {
+                "gradient": {
+                  "default": false,
+                  "kind": "switch",
+                  "max": 0,
+                  "min": 0,
+                  "options": []
+                },
+                "point": {
+                  "default": 3,
+                  "kind": "number",
+                  "max": 5,
+                  "min": 1,
+                  "options": []
+                }
+              },
+              "style": false
+            },
+            "spectrum": {
+              "available": true,
+              "calm_default": false,
+              "colour": true,
+              "evidence": "H66A0 MusicModeH66A0.d Spectrum legacy selector",
+              "palette_size": 0,
+              "parameters": {},
+              "style": false
+            },
+            "splash": {
+              "available": true,
+              "calm_default": false,
+              "colour": false,
+              "evidence": "H66A0 MusicModeH66A0.d / SubMusicModeConfig.makeShuiHua",
+              "palette": {
+                "default": [
+                  [
+                    255,
+                    0,
+                    0
+                  ],
+                  [
+                    255,
+                    127,
+                    0
+                  ],
+                  [
+                    255,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    0,
+                    255
+                  ],
+                  [
+                    0,
+                    255,
+                    255
+                  ],
+                  [
+                    139,
+                    0,
+                    255
+                  ]
+                ],
+                "max": 8,
+                "min": 1
+              },
+              "palette_size": 7,
+              "parameters": {},
+              "style": false
+            },
+            "spring": {
+              "available": true,
+              "calm_default": false,
+              "colour": false,
+              "evidence": "H66A0 MusicModeH66A0.d / SubMusicModeConfig.O0",
+              "palette": {
+                "default": [
+                  [
+                    255,
+                    0,
+                    0
+                  ],
+                  [
+                    255,
+                    127,
+                    0
+                  ],
+                  [
+                    255,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    0,
+                    255
+                  ],
+                  [
+                    0,
+                    255,
+                    255
+                  ],
+                  [
+                    139,
+                    0,
+                    255
+                  ]
+                ],
+                "max": 8,
+                "min": 1
+              },
+              "palette_size": 7,
+              "parameters": {},
+              "style": false
+            },
+            "windmill": {
+              "available": true,
+              "calm_default": false,
+              "colour": false,
+              "evidence": "H66A0 MusicModeH66A0.d / SubMusicModeConfig.makeWindmill",
+              "palette": {
+                "default": [
+                  [
+                    255,
+                    0,
+                    0
+                  ],
+                  [
+                    255,
+                    127,
+                    0
+                  ],
+                  [
+                    255,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    0,
+                    255
+                  ],
+                  [
+                    0,
+                    255,
+                    255
+                  ],
+                  [
+                    139,
+                    0,
+                    255
+                  ]
+                ],
+                "max": 8,
+                "min": 2
+              },
+              "palette_size": 7,
+              "parameters": {},
+              "style": false
+            }
+          },
+          "painted_addressing": "physical_ic",
+          "painted_background": [
+            255,
+            255,
+            255
+          ],
+          "painted_effects": [
+            {
+              "id": "clockwise",
+              "label": "Clockwise"
+            },
+            {
+              "id": "counter_clockwise",
+              "label": "Counter clockwise"
+            },
+            {
+              "id": "cycle",
+              "label": "Cycle"
+            },
+            {
+              "id": "gradient",
+              "label": "Gradient"
+            },
+            {
+              "id": "twinkle",
+              "label": "Twinkle"
+            },
+            {
+              "id": "breathe",
+              "label": "Breathe"
+            }
+          ],
+          "sku": "H66A0",
+          "supports": {
+            "advanced": "unsupported",
+            "multi": "supported",
+            "workshop": "unsupported"
+          },
+          "templates": [
+            {
+              "category": "single-layer",
+              "content": {
+                "addressing": "physical_ic",
+                "background": [
+                  255,
+                  255,
+                  255
+                ],
+                "brightness": 100,
+                "effect": "clockwise",
+                "kind": "h617a_painted",
+                "segments": [
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null
+                ],
+                "speed": 50
+              },
+              "id": "template:paint",
+              "label": "Graffiti"
+            },
+            {
+              "category": "single-layer",
+              "content": {
+                "family": 0,
+                "kind": "h617a_single",
+                "palette": [
+                  [
+                    255,
+                    0,
+                    0
+                  ],
+                  [
+                    255,
+                    127,
+                    0
+                  ],
+                  [
+                    255,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    0,
+                    255
+                  ],
+                  [
+                    0,
+                    255,
+                    255
+                  ],
+                  [
+                    139,
+                    0,
+                    255
+                  ]
+                ],
+                "speed": 50,
+                "variant": 0
+              },
+              "id": "template:single:0:0",
+              "label": "Fade"
+            },
+            {
+              "category": "single-layer",
+              "content": {
+                "family": 1,
+                "kind": "h617a_single",
+                "palette": [
+                  [
+                    255,
+                    0,
+                    0
+                  ],
+                  [
+                    255,
+                    127,
+                    0
+                  ],
+                  [
+                    255,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    0,
+                    255
+                  ],
+                  [
+                    0,
+                    255,
+                    255
+                  ],
+                  [
+                    139,
+                    0,
+                    255
+                  ]
+                ],
+                "speed": 50,
+                "variant": 0
+              },
+              "id": "template:single:1:0",
+              "label": "Jumping"
+            },
+            {
+              "category": "single-layer",
+              "content": {
+                "family": 2,
+                "kind": "h617a_single",
+                "palette": [
+                  [
+                    255,
+                    0,
+                    0
+                  ],
+                  [
+                    255,
+                    127,
+                    0
+                  ],
+                  [
+                    255,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    0,
+                    255
+                  ],
+                  [
+                    0,
+                    255,
+                    255
+                  ],
+                  [
+                    139,
+                    0,
+                    255
+                  ]
+                ],
+                "speed": 50,
+                "variant": 0
+              },
+              "id": "template:single:2:0",
+              "label": "Blinking"
+            },
+            {
+              "category": "single-layer",
+              "content": {
+                "family": 3,
+                "kind": "h617a_single",
+                "palette": [
+                  [
+                    255,
+                    0,
+                    0
+                  ],
+                  [
+                    255,
+                    127,
+                    0
+                  ],
+                  [
+                    255,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    0,
+                    255
+                  ],
+                  [
+                    0,
+                    255,
+                    255
+                  ],
+                  [
+                    139,
+                    0,
+                    255
+                  ]
+                ],
+                "speed": 50,
+                "variant": 3
+              },
+              "id": "template:single:3:3",
+              "label": "Marquee"
+            },
+            {
+              "category": "single-layer",
+              "content": {
+                "family": 8,
+                "kind": "h617a_single",
+                "palette": [
+                  [
+                    255,
+                    0,
+                    0
+                  ],
+                  [
+                    255,
+                    127,
+                    0
+                  ],
+                  [
+                    255,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    0,
+                    255
+                  ],
+                  [
+                    0,
+                    255,
+                    255
+                  ],
+                  [
+                    139,
+                    0,
+                    255
+                  ]
+                ],
+                "speed": 50,
+                "variant": 9
+              },
+              "id": "template:single:8:9",
+              "label": "Stream"
+            },
+            {
+              "category": "single-layer",
+              "content": {
+                "family": 9,
+                "kind": "h617a_single",
+                "palette": [
+                  [
+                    255,
+                    0,
+                    0
+                  ],
+                  [
+                    255,
+                    127,
+                    0
+                  ],
+                  [
+                    255,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    0,
+                    255
+                  ],
+                  [
+                    0,
+                    255,
+                    255
+                  ],
+                  [
+                    139,
+                    0,
+                    255
+                  ]
+                ],
+                "speed": 50,
+                "variant": 9
+              },
+              "id": "template:single:9:9",
+              "label": "Flow"
+            },
+            {
+              "category": "single-layer",
+              "content": {
+                "family": 10,
+                "kind": "h617a_single",
+                "palette": [
+                  [
+                    255,
+                    0,
+                    0
+                  ],
+                  [
+                    0,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    0,
+                    255
+                  ]
+                ],
+                "speed": 50,
+                "variant": 0
+              },
+              "id": "template:single:10:0",
+              "label": "Chase"
+            },
+            {
+              "category": "single-layer",
+              "content": {
+                "family": 37,
+                "kind": "h617a_single",
+                "palette": [
+                  [
+                    255,
+                    0,
+                    0
+                  ],
+                  [
+                    255,
+                    127,
+                    0
+                  ],
+                  [
+                    255,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    0,
+                    255
+                  ],
+                  [
+                    0,
+                    255,
+                    255
+                  ],
+                  [
+                    139,
+                    0,
+                    255
+                  ]
+                ],
+                "speed": 50,
+                "variant": 0
+              },
+              "id": "template:single:37:0",
+              "label": "Fill"
+            },
+            {
+              "category": "single-layer",
+              "content": {
+                "family": 38,
+                "kind": "h617a_single",
+                "palette": [
+                  [
+                    255,
+                    0,
+                    0
+                  ],
+                  [
+                    255,
+                    127,
+                    0
+                  ],
+                  [
+                    255,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    0,
+                    255
+                  ],
+                  [
+                    0,
+                    255,
+                    255
+                  ],
+                  [
+                    139,
+                    0,
+                    255
+                  ]
+                ],
+                "speed": 50,
+                "variant": 0
+              },
+              "id": "template:single:38:0",
+              "label": "Confrontation"
+            },
+            {
+              "category": "single-layer",
+              "content": {
+                "family": 39,
+                "kind": "h617a_single",
+                "palette": [
+                  [
+                    255,
+                    0,
+                    0
+                  ],
+                  [
+                    255,
+                    127,
+                    0
+                  ],
+                  [
+                    255,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    0,
+                    255
+                  ],
+                  [
+                    0,
+                    255,
+                    255
+                  ],
+                  [
+                    139,
+                    0,
+                    255
+                  ]
+                ],
+                "speed": 50,
+                "variant": 0
+              },
+              "id": "template:single:39:0",
+              "label": "Stretch"
+            },
+            {
+              "category": "single-layer",
+              "content": {
+                "family": 40,
+                "kind": "h617a_single",
+                "palette": [
+                  [
+                    255,
+                    0,
+                    0
+                  ],
+                  [
+                    255,
+                    127,
+                    0
+                  ],
+                  [
+                    255,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    255,
+                    0
+                  ],
+                  [
+                    0,
+                    0,
+                    255
+                  ],
+                  [
+                    0,
+                    255,
+                    255
+                  ],
+                  [
+                    139,
+                    0,
+                    255
+                  ]
+                ],
+                "speed": 50,
+                "variant": 0
+              },
+              "id": "template:single:40:0",
+              "label": "Halo Dyeing"
+            },
+            {
+              "category": "music",
+              "content": {
+                "calm": null,
+                "colour": null,
+                "kind": "music_profile",
+                "mode": "energetic",
+                "model": "H66A0",
+                "parameters": {},
+                "sensitivity": 99
+              },
+              "id": "template:music:energetic",
+              "label": "Energetic"
+            },
+            {
+              "category": "music",
+              "content": {
+                "calm": false,
+                "colour": null,
+                "kind": "music_profile",
+                "mode": "rhythm",
+                "model": "H66A0",
+                "parameters": {},
+                "sensitivity": 99
+              },
+              "id": "template:music:rhythm",
+              "label": "Rhythm"
+            },
+            {
+              "category": "music",
+              "content": {
+                "calm": null,
+                "colour": null,
+                "kind": "music_profile",
+                "mode": "spectrum",
+                "model": "H66A0",
+                "parameters": {},
+                "sensitivity": 99
+              },
+              "id": "template:music:spectrum",
+              "label": "Spectrum"
+            },
+            {
+              "category": "music",
+              "content": {
+                "calm": null,
+                "colour": null,
+                "kind": "music_profile",
+                "mode": "rolling",
+                "model": "H66A0",
+                "parameters": {},
+                "sensitivity": 99
+              },
+              "id": "template:music:rolling",
+              "label": "Rolling"
+            },
+            {
+              "category": "music",
+              "content": {
+                "calm": null,
+                "colour": null,
+                "kind": "music_profile",
+                "mode": "separation",
+                "model": "H66A0",
+                "parameters": {},
+                "sensitivity": 99
+              },
+              "id": "template:music:separation",
+              "label": "Separation"
+            },
+            {
+              "category": "music",
+              "content": {
+                "calm": null,
+                "colour": null,
+                "kind": "music_profile",
+                "mode": "hopping",
+                "model": "H66A0",
+                "parameters": {},
+                "sensitivity": 99
+              },
+              "id": "template:music:hopping",
+              "label": "Hopping"
+            },
+            {
+              "category": "music",
+              "content": {
+                "calm": null,
+                "colour": null,
+                "kind": "music_profile",
+                "mode": "piano_keys",
+                "model": "H66A0",
+                "parameters": {},
+                "sensitivity": 99
+              },
+              "id": "template:music:piano_keys",
+              "label": "Piano Keys"
+            },
+            {
+              "category": "music",
+              "content": {
+                "calm": null,
+                "colour": null,
+                "kind": "music_profile",
+                "mode": "fountain",
+                "model": "H66A0",
+                "parameters": {},
+                "sensitivity": 99
+              },
+              "id": "template:music:fountain",
+              "label": "Fountain"
+            },
+            {
+              "category": "music",
+              "content": {
+                "calm": null,
+                "colour": null,
+                "kind": "music_profile",
+                "mode": "day_and_night",
+                "model": "H66A0",
+                "parameters": {},
+                "sensitivity": 99
+              },
+              "id": "template:music:day_and_night",
+              "label": "Day And Night"
+            },
+            {
+              "category": "music",
+              "content": {
+                "calm": false,
+                "colour": null,
+                "kind": "music_profile",
+                "mode": "bloom",
+                "model": "H66A0",
+                "parameters": {},
+                "sensitivity": 99
+              },
+              "id": "template:music:bloom",
+              "label": "Bloom"
+            },
+            {
+              "category": "music",
+              "content": {
+                "calm": null,
+                "colour": null,
+                "kind": "music_profile",
+                "mode": "splash",
+                "model": "H66A0",
+                "parameters": {},
+                "sensitivity": 99
+              },
+              "id": "template:music:splash",
+              "label": "Splash"
+            },
+            {
+              "category": "music",
+              "content": {
+                "calm": null,
+                "colour": null,
+                "kind": "music_profile",
+                "mode": "spring",
+                "model": "H66A0",
+                "parameters": {},
+                "sensitivity": 99
+              },
+              "id": "template:music:spring",
+              "label": "Spring"
+            },
+            {
+              "category": "music",
+              "content": {
+                "calm": null,
+                "colour": null,
+                "kind": "music_profile",
+                "mode": "painting",
+                "model": "H66A0",
+                "parameters": {},
+                "sensitivity": 99
+              },
+              "id": "template:music:painting",
+              "label": "Painting"
+            },
+            {
+              "category": "music",
+              "content": {
+                "calm": null,
+                "colour": null,
+                "kind": "music_profile",
+                "mode": "beat",
+                "model": "H66A0",
+                "parameters": {},
+                "sensitivity": 99
+              },
+              "id": "template:music:beat",
+              "label": "Beat"
+            },
+            {
+              "category": "music",
+              "content": {
+                "calm": null,
+                "colour": null,
+                "kind": "music_profile",
+                "mode": "windmill",
+                "model": "H66A0",
+                "parameters": {},
+                "sensitivity": 99
+              },
+              "id": "template:music:windmill",
+              "label": "Windmill"
+            },
+            {
+              "category": "music",
+              "content": {
+                "calm": null,
+                "colour": null,
+                "kind": "music_profile",
+                "mode": "flowing_light",
+                "model": "H66A0",
+                "parameters": {},
+                "sensitivity": 99
+              },
+              "id": "template:music:flowing_light",
+              "label": "Flowing Light"
+            },
+            {
+              "category": "video",
+              "content": {
+                "blank_screen": false,
+                "full_screen": null,
+                "kind": "video_profile",
+                "mode": "movie",
+                "model": "H66A0",
+                "relative_brightness": {
+                  "bottom": 100,
+                  "left": 100,
+                  "right": 100,
+                  "top": 100
+                },
+                "saturation": 100,
+                "sound_effects": false,
+                "sound_effects_softness": 50,
+                "white_balance_position": null,
+                "white_balance_value": 50
+              },
+              "id": "template:video:movie",
+              "label": "Movie"
+            },
+            {
+              "category": "video",
+              "content": {
+                "blank_screen": false,
+                "full_screen": null,
+                "kind": "video_profile",
+                "mode": "game",
+                "model": "H66A0",
+                "relative_brightness": {
+                  "bottom": 100,
+                  "left": 100,
+                  "right": 100,
+                  "top": 100
+                },
+                "saturation": 100,
+                "sound_effects": false,
+                "sound_effects_softness": 50,
+                "white_balance_position": null,
+                "white_balance_value": 50
+              },
+              "id": "template:video:game",
+              "label": "Game"
+            }
+          ],
+          "video_controls": {
+            "brightness_zones": [
+              "left",
+              "top",
+              "right",
+              "bottom"
+            ],
+            "saturation_min": 1,
+            "white_balance": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "representation": "scalar"
+            }
+          },
+          "video_modes": [
+            {
+              "id": "movie",
+              "label": "Movie"
+            },
+            {
+              "id": "game",
+              "label": "Game"
+            }
+          ],
+          "video_settings": [
+            "saturation",
+            "sound_effects",
+            "white_balance",
+            "relative_brightness",
+            "blank_screen",
+            "black_border"
+          ],
+          "workflows": [
+            {
+              "application": "home_assistant",
+              "content_kind": "h617a_painted",
+              "id": "painted",
+              "label": "Graffiti"
+            },
+            {
+              "application": "home_assistant",
+              "content_kind": "h617a_single",
+              "id": "single",
+              "label": "Basic"
+            },
+            {
+              "application": "home_assistant",
+              "content_kind": "h617a_multi",
+              "id": "multi",
+              "label": "Mixed"
+            },
+            {
+              "application": "studio",
+              "content_kind": "scene_builtin",
+              "id": "native_scenes",
+              "label": "Scenes"
+            },
+            {
+              "application": "home_assistant",
+              "content_kind": "music_profile",
+              "id": "native_music",
+              "label": "Music"
+            },
+            {
+              "application": "home_assistant",
+              "content_kind": "video_profile",
+              "id": "video",
+              "label": "Video"
+            }
+          ],
+          "workshop_templates": []
+        },
+        "config_entry_id": "h66a0-main",
+        "custom_effects": {
+          "advanced": "unsupported",
+          "multi": "supported",
+          "painted": "supported",
+          "palette_diy": "unsupported",
+          "single": "supported",
+          "workshop": "unsupported"
+        },
+        "display_name": "H66A0 TV Backlight 3 Pro",
+        "effect_categories": [
+          "video",
+          "scenes",
+          "effects",
+          "reactive"
+        ],
+        "light_entity_id": null,
+        "model": "H66A0",
+        "music_settings": {
+          "beat": {
+            "available": true,
+            "calm_default": false,
+            "colour": false,
+            "evidence": "H66A0 MusicModeH66A0.d / SubMusicModeConfig.makeJiePai",
+            "palette": {
+              "default": [
+                [
+                  255,
+                  0,
+                  0
+                ],
+                [
+                  255,
+                  127,
+                  0
+                ],
+                [
+                  255,
+                  255,
+                  0
+                ],
+                [
+                  0,
+                  255,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  255
+                ],
+                [
+                  0,
+                  255,
+                  255
+                ],
+                [
+                  139,
+                  0,
+                  255
+                ]
+              ],
+              "max": 8,
+              "min": 1
+            },
+            "palette_size": 7,
+            "parameters": {},
+            "style": false
+          },
+          "bloom": {
+            "available": true,
+            "calm_default": false,
+            "colour": false,
+            "evidence": "H66A0 MusicModeH66A0.d / RgbMusicZhanFang",
+            "palette": {
+              "default": [
+                [
+                  255,
+                  0,
+                  0
+                ],
+                [
+                  255,
+                  127,
+                  0
+                ],
+                [
+                  255,
+                  255,
+                  0
+                ],
+                [
+                  0,
+                  255,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  255
+                ],
+                [
+                  0,
+                  255,
+                  255
+                ],
+                [
+                  139,
+                  0,
+                  255
+                ]
+              ],
+              "max": 8,
+              "min": 1
+            },
+            "palette_size": 7,
+            "parameters": {},
+            "style": true
+          },
+          "day_and_night": {
+            "available": true,
+            "calm_default": false,
+            "colour": false,
+            "evidence": "H66A0 MusicModeH66A0.d case 55 / RgbicMusicZhouYe",
+            "palette": {
+              "default": [
+                [
+                  255,
+                  0,
+                  0
+                ],
+                [
+                  255,
+                  127,
+                  0
+                ],
+                [
+                  255,
+                  255,
+                  0
+                ],
+                [
+                  0,
+                  255,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  255
+                ],
+                [
+                  0,
+                  255,
+                  255
+                ],
+                [
+                  139,
+                  0,
+                  255
+                ]
+              ],
+              "max": 8,
+              "min": 1
+            },
+            "palette_size": 7,
+            "parameters": {
+              "gradient": {
+                "default": false,
+                "kind": "switch",
+                "max": 0,
+                "min": 0,
+                "options": []
+              },
+              "segment_count": {
+                "default": 13,
+                "kind": "number",
+                "max": 18,
+                "min": 1,
+                "options": []
+              },
+              "speed": {
+                "default": 20,
+                "kind": "number",
+                "max": 50,
+                "min": 1,
+                "options": []
+              }
+            },
+            "style": false
+          },
+          "energetic": {
+            "available": true,
+            "calm_default": false,
+            "colour": true,
+            "evidence": "H6099 SubModeMusicV1 legacy Energetic selector; new-detail upload path unresolved",
+            "palette_size": 0,
+            "parameters": {},
+            "style": false
+          },
+          "flowing_light": {
+            "available": true,
+            "calm_default": false,
+            "colour": false,
+            "evidence": "H66A0 MusicModeH66A0.d / SubMusicModeConfig.makeFlowingLight",
+            "palette": {
+              "default": [
+                [
+                  255,
+                  0,
+                  0
+                ],
+                [
+                  255,
+                  127,
+                  0
+                ],
+                [
+                  255,
+                  255,
+                  0
+                ],
+                [
+                  0,
+                  255,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  255
+                ],
+                [
+                  0,
+                  255,
+                  255
+                ],
+                [
+                  139,
+                  0,
+                  255
+                ]
+              ],
+              "max": 8,
+              "min": 1
+            },
+            "palette_size": 7,
+            "parameters": {},
+            "style": false
+          },
+          "fountain": {
+            "available": true,
+            "calm_default": false,
+            "colour": false,
+            "evidence": "H66A0 MusicModeH66A0.d / RgbicMusicDuiJi",
+            "palette": {
+              "default": [
+                [
+                  255,
+                  0,
+                  0
+                ],
+                [
+                  255,
+                  127,
+                  0
+                ],
+                [
+                  255,
+                  255,
+                  0
+                ],
+                [
+                  0,
+                  255,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  255
+                ],
+                [
+                  0,
+                  255,
+                  255
+                ],
+                [
+                  139,
+                  0,
+                  255
+                ]
+              ],
+              "max": 8,
+              "min": 1
+            },
+            "palette_size": 7,
+            "parameters": {
+              "direction": {
+                "default": "two_way",
+                "kind": "select",
+                "max": 0,
+                "min": 0,
+                "options": [
+                  "clockwise",
+                  "counterclockwise",
+                  "two_way"
+                ]
+              }
+            },
+            "style": false
+          },
+          "hopping": {
+            "available": true,
+            "calm_default": false,
+            "colour": false,
+            "evidence": "H66A0 MusicModeH66A0.d / RgbicMusicYueDong; ColorUtils.toNoColor = RGB 1,1,1",
+            "palette": {
+              "default": [
+                [
+                  255,
+                  0,
+                  0
+                ],
+                [
+                  255,
+                  127,
+                  0
+                ],
+                [
+                  255,
+                  255,
+                  0
+                ],
+                [
+                  0,
+                  255,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  255
+                ],
+                [
+                  0,
+                  255,
+                  255
+                ],
+                [
+                  139,
+                  0,
+                  255
+                ]
+              ],
+              "max": 8,
+              "min": 1
+            },
+            "palette_size": 7,
+            "parameters": {
+              "background": {
+                "default": 65793,
+                "kind": "number",
+                "max": 16777215,
+                "min": 0,
+                "options": []
+              },
+              "relative_brightness": {
+                "default": 25,
+                "kind": "number",
+                "max": 50,
+                "min": 0,
+                "options": []
+              }
+            },
+            "style": false
+          },
+          "painting": {
+            "available": true,
+            "calm_default": false,
+            "colour": false,
+            "evidence": "H66A0 MusicModeH66A0.d / SubMusicModeConfig.makeCaihui",
+            "palette": {
+              "default": [
+                [
+                  255,
+                  0,
+                  0
+                ],
+                [
+                  255,
+                  127,
+                  0
+                ],
+                [
+                  255,
+                  255,
+                  0
+                ],
+                [
+                  0,
+                  255,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  255
+                ],
+                [
+                  0,
+                  255,
+                  255
+                ],
+                [
+                  139,
+                  0,
+                  255
+                ]
+              ],
+              "max": 8,
+              "min": 1
+            },
+            "palette_size": 7,
+            "parameters": {},
+            "style": false
+          },
+          "piano_keys": {
+            "available": true,
+            "calm_default": false,
+            "colour": false,
+            "evidence": "H66A0 MusicModeH66A0.d / RgbicMusicGangQinJian",
+            "palette": {
+              "default": [
+                [
+                  255,
+                  0,
+                  0
+                ],
+                [
+                  255,
+                  127,
+                  0
+                ],
+                [
+                  255,
+                  255,
+                  0
+                ],
+                [
+                  0,
+                  255,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  255
+                ],
+                [
+                  0,
+                  255,
+                  255
+                ],
+                [
+                  139,
+                  0,
+                  255
+                ]
+              ],
+              "max": 8,
+              "min": 1
+            },
+            "palette_size": 7,
+            "parameters": {
+              "gradient": {
+                "default": false,
+                "kind": "switch",
+                "max": 0,
+                "min": 0,
+                "options": []
+              },
+              "key_count": {
+                "default": 27,
+                "kind": "number",
+                "max": 54,
+                "min": 9,
+                "options": []
+              }
+            },
+            "style": false
+          },
+          "rhythm": {
+            "available": true,
+            "calm_default": false,
+            "colour": true,
+            "evidence": "H66A0 MusicModeH66A0.d Rhythm legacy selector",
+            "palette_size": 0,
+            "parameters": {},
+            "style": true
+          },
+          "rolling": {
+            "available": true,
+            "calm_default": false,
+            "colour": true,
+            "evidence": "H66A0 MusicModeH66A0.d Rolling legacy selector",
+            "palette_size": 0,
+            "parameters": {},
+            "style": false
+          },
+          "separation": {
+            "available": true,
+            "calm_default": false,
+            "colour": false,
+            "evidence": "H66A0 MusicModeH66A0.d / FenLi.Builder",
+            "palette": {
+              "default": [
+                [
+                  255,
+                  0,
+                  0
+                ],
+                [
+                  255,
+                  127,
+                  0
+                ],
+                [
+                  255,
+                  255,
+                  0
+                ],
+                [
+                  0,
+                  255,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  255
+                ],
+                [
+                  0,
+                  255,
+                  255
+                ],
+                [
+                  139,
+                  0,
+                  255
+                ]
+              ],
+              "max": 8,
+              "min": 1
+            },
+            "palette_size": 7,
+            "parameters": {
+              "gradient": {
+                "default": false,
+                "kind": "switch",
+                "max": 0,
+                "min": 0,
+                "options": []
+              },
+              "point": {
+                "default": 3,
+                "kind": "number",
+                "max": 5,
+                "min": 1,
+                "options": []
+              }
+            },
+            "style": false
+          },
+          "spectrum": {
+            "available": true,
+            "calm_default": false,
+            "colour": true,
+            "evidence": "H66A0 MusicModeH66A0.d Spectrum legacy selector",
+            "palette_size": 0,
+            "parameters": {},
+            "style": false
+          },
+          "splash": {
+            "available": true,
+            "calm_default": false,
+            "colour": false,
+            "evidence": "H66A0 MusicModeH66A0.d / SubMusicModeConfig.makeShuiHua",
+            "palette": {
+              "default": [
+                [
+                  255,
+                  0,
+                  0
+                ],
+                [
+                  255,
+                  127,
+                  0
+                ],
+                [
+                  255,
+                  255,
+                  0
+                ],
+                [
+                  0,
+                  255,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  255
+                ],
+                [
+                  0,
+                  255,
+                  255
+                ],
+                [
+                  139,
+                  0,
+                  255
+                ]
+              ],
+              "max": 8,
+              "min": 1
+            },
+            "palette_size": 7,
+            "parameters": {},
+            "style": false
+          },
+          "spring": {
+            "available": true,
+            "calm_default": false,
+            "colour": false,
+            "evidence": "H66A0 MusicModeH66A0.d / SubMusicModeConfig.O0",
+            "palette": {
+              "default": [
+                [
+                  255,
+                  0,
+                  0
+                ],
+                [
+                  255,
+                  127,
+                  0
+                ],
+                [
+                  255,
+                  255,
+                  0
+                ],
+                [
+                  0,
+                  255,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  255
+                ],
+                [
+                  0,
+                  255,
+                  255
+                ],
+                [
+                  139,
+                  0,
+                  255
+                ]
+              ],
+              "max": 8,
+              "min": 1
+            },
+            "palette_size": 7,
+            "parameters": {},
+            "style": false
+          },
+          "windmill": {
+            "available": true,
+            "calm_default": false,
+            "colour": false,
+            "evidence": "H66A0 MusicModeH66A0.d / SubMusicModeConfig.makeWindmill",
+            "palette": {
+              "default": [
+                [
+                  255,
+                  0,
+                  0
+                ],
+                [
+                  255,
+                  127,
+                  0
+                ],
+                [
+                  255,
+                  255,
+                  0
+                ],
+                [
+                  0,
+                  255,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  255
+                ],
+                [
+                  0,
+                  255,
+                  255
+                ],
+                [
+                  139,
+                  0,
+                  255
+                ]
+              ],
+              "max": 8,
+              "min": 2
+            },
+            "palette_size": 7,
+            "parameters": {},
+            "style": false
+          }
+        },
+        "physical_ic_count": 90,
+        "preview_health": {
+          "checked_at": "2026-08-17T00:00:00Z",
+          "config_entry_id": "h66a0-main",
           "error_code": null,
           "error_message": null,
           "incident_id": null,
@@ -48198,6 +52671,49 @@
         ],
         "schema_version": 1,
         "sku": "H6199"
+      },
+      "H66A0": {
+        "categories": [
+          {
+            "id": 2533,
+            "name": "House of the Dragon"
+          },
+          {
+            "id": 1763,
+            "name": "Natural"
+          }
+        ],
+        "enabled": true,
+        "scenes": [
+          {
+            "category": "House of the Dragon",
+            "category_id": 2533,
+            "display_name": "Dracarys",
+            "effect_id": 43263,
+            "name": "Dracarys",
+            "parameter_kind": "layers",
+            "scene_id": 31090,
+            "scene_type": 2,
+            "selector_only": false,
+            "speed": null,
+            "variant": ""
+          },
+          {
+            "category": "Natural",
+            "category_id": 1763,
+            "display_name": "Rainbow",
+            "effect_id": 31689,
+            "name": "Rainbow",
+            "parameter_kind": "none",
+            "scene_id": 21203,
+            "scene_type": 0,
+            "selector_only": false,
+            "speed": null,
+            "variant": ""
+          }
+        ],
+        "schema_version": 1,
+        "sku": "H66A0"
       },
       "H7020": {
         "categories": [

@@ -47,7 +47,9 @@ class MusicVariant:
 
 
 # Layouts whose A3 companion carries the effect's parameters; their selectors omit style and fixed colour.
-COMPANION_MUSIC_LAYOUTS = frozenset({"music_body", "h6076_music_body", "h6099_music_parameters", "h7025_music_body"})
+COMPANION_MUSIC_LAYOUTS = frozenset(
+    {"music_body", "h6076_music_body", "h6099_music_parameters", "h66a0_music_parameters", "h7025_music_body"}
+)
 
 # Captured values, not values calculated from logical colour zones or guessed IC counts.
 H617A_MUSIC_VARIANTS = (
@@ -334,6 +336,90 @@ H6099_MUSIC_VARIANTS = (
         bytes.fromhex("37" + _H6099_PALETTE + "000000"),
         # The APK never calls setPiece and ignores UI index 2. Do not advertise those controls.
         requires_physical_ic_count=True,
+        palette_bounds=(1, 8),
+        supports_fixed_colour=False,
+    ),
+)
+
+# Android 7.6.01 pact_h6099/detail/mode/MusicModeH66A0, goods 327.
+H66A0_MUSIC_VARIANTS = (
+    *(
+        replace(
+            variant,
+            evidence=variant.evidence.replace("H6099 MusicMode", "H66A0 MusicModeH66A0"),
+            layout="h66a0_music_parameters" if variant.layout == "h6099_music_parameters" else variant.layout,
+        )
+        for variant in H6099_MUSIC_VARIANTS
+        if variant.mode_code in (3, 4, 5, 6, 0x30, 0x32, 0x33, 0x34, 0x35)
+    ),
+    MusicVariant(
+        0x37,
+        "H66A0 MusicModeH66A0.d case 55 / RgbicMusicZhouYe",
+        "h66a0_music_parameters",
+        bytes.fromhex("37" + _H6099_PALETTE + "0d1400"),
+        (
+            MusicParamSpec(
+                "music_daynight_segments",
+                "segment_count",
+                "piece_count",
+                "number",
+                13,
+                1,
+                18,
+                requires_physical_ic_count=True,
+            ),
+            MusicParamSpec("music_daynight_speed", "speed", "speed", "number", 20, 1, 50),
+            MusicParamSpec("music_daynight_gradient", "gradient", "gradient", "switch", False),
+        ),
+        requires_physical_ic_count=True,
+        palette_bounds=(1, 8),
+        supports_fixed_colour=False,
+    ),
+    MusicVariant(
+        0x84,
+        "H66A0 MusicModeH66A0.d / SubMusicModeConfig.makeShuiHua",
+        "h66a0_music_parameters",
+        bytes.fromhex("84" + _H6099_PALETTE),
+        palette_bounds=(1, 8),
+        supports_fixed_colour=False,
+    ),
+    MusicVariant(
+        0x85,
+        "H66A0 MusicModeH66A0.d / SubMusicModeConfig.O0",
+        "h66a0_music_parameters",
+        bytes.fromhex("85" + _H6099_PALETTE),
+        palette_bounds=(1, 8),
+        supports_fixed_colour=False,
+    ),
+    MusicVariant(
+        0x55,
+        "H66A0 MusicModeH66A0.d / SubMusicModeConfig.makeCaihui",
+        "h66a0_music_parameters",
+        bytes.fromhex("55" + _H6099_PALETTE + "01"),
+        palette_bounds=(1, 8),
+        supports_fixed_colour=False,
+    ),
+    MusicVariant(
+        0xA9,
+        "H66A0 MusicModeH66A0.d / SubMusicModeConfig.makeJiePai",
+        "h66a0_music_parameters",
+        bytes.fromhex("a9" + _H6099_PALETTE + "0100"),
+        palette_bounds=(1, 8),
+        supports_fixed_colour=False,
+    ),
+    MusicVariant(
+        0x78,
+        "H66A0 MusicModeH66A0.d / SubMusicModeConfig.makeWindmill",
+        "h66a0_music_parameters",
+        bytes.fromhex("78" + _H6099_PALETTE),
+        palette_bounds=(2, 8),
+        supports_fixed_colour=False,
+    ),
+    MusicVariant(
+        0x53,
+        "H66A0 MusicModeH66A0.d / SubMusicModeConfig.makeFlowingLight",
+        "h66a0_music_parameters",
+        bytes.fromhex("53" + _H6099_PALETTE + "01"),
         palette_bounds=(1, 8),
         supports_fixed_colour=False,
     ),
@@ -640,7 +726,7 @@ def music_variant(profile: ModelProfile, mode_code: int) -> MusicVariant | None:
         and mode_code == 0x34
         and ic is not None
         and (
-            variant.layout == "h6099_music_parameters"
+            variant.layout in {"h6099_music_parameters", "h66a0_music_parameters"}
             or any(spec.requires_physical_ic_count for spec in variant.parameters)
         )
     ):
@@ -656,6 +742,22 @@ def music_variant(profile: ModelProfile, mode_code: int) -> MusicVariant | None:
             variant,
             parameters=(
                 replace(variant.parameters[0], default=default, min_value=minimum, max_value=maximum),
+                *variant.parameters[1:],
+            ),
+        )
+    if (
+        variant
+        and mode_code == 0x37
+        and variant.layout in {"h6099_music_parameters", "h66a0_music_parameters"}
+        and variant.parameters
+        and ic is not None
+    ):
+        max_value = ic // 2 if ic < 30 else ceil(ic / 5)
+        default = ic // 2 if ic < 30 else ceil(ic * 7 / 50)
+        variant = replace(
+            variant,
+            parameters=(
+                replace(variant.parameters[0], default=min(max_value, default), max_value=max_value),
                 *variant.parameters[1:],
             ),
         )
