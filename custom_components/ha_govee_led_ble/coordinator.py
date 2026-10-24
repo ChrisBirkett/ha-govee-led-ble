@@ -2293,8 +2293,8 @@ class GoveeBLECoordinator(
             try:
                 async with asyncio.timeout_at(deadline):
                     await client.disconnect()
-            except BleakError, TimeoutError:
-                pass
+            except (BleakError, TimeoutError) as err:
+                _LOGGER.debug("Disconnect of failed BLE client did not complete: %s", type(err).__name__)
 
         attempt_timeout = timeout / 2
         for attempt in range(2):

@@ -470,7 +470,7 @@ class _DreamviewMixin(_CoordinatorBase):
                                 await self._dreamview_store.async_save(prior_authored)
                             self._dreamview_authored = prior_authored
                     except Exception:
-                        _LOGGER.error("DreamView rollback incomplete; persisted recovery intent retained")
+                        _LOGGER.exception("DreamView rollback incomplete; persisted recovery intent retained")
                 raise
             finally:
                 self._dreamview_private_write = False

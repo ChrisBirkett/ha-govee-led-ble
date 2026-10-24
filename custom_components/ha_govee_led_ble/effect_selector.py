@@ -219,24 +219,6 @@ def compatible_saved_effects(
     )
 
 
-def saved_effect_by_name(
-    items: Iterable[LibraryItem],
-    model: str,
-    effect_name: str,
-    *,
-    profile: ModelProfile | None = None,
-) -> LibraryItem | None:
-    entries = effect_selector_entries(
-        model,
-        frozenset(EFFECT_CATEGORIES),
-        items,
-        prefix_effect_names=False,
-        profile=profile,
-    )
-    resolved = resolve_effect_selector(entries, effect_name)
-    return resolved.item if resolved is not None and resolved.source == "saved" else None
-
-
 def _selector_candidates(
     model: str,
     categories: frozenset[str],

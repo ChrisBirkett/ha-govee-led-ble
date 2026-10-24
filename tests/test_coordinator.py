@@ -3695,31 +3695,14 @@ async def test_segment_preservation_baseline_is_first_write_boundary(coord, segm
 
 
 async def test_native_scene_primitive_acquires_control_lock_exactly_once(coord):
-    class CountingLock:
-        def __init__(self) -> None:
-            self.acquisitions = 0
-            self._locked = False
+    class CountingArbiter(BLEControlArbiter):
+        acquisitions = 0
 
-        async def __aenter__(self):
-            await self.acquire()
-
-        async def __aexit__(self, *_args):
-            self.release()
-
-        async def acquire(self):
-            assert not self._locked
-            self._locked = True
+        def hold(self, *args, **kwargs):
             self.acquisitions += 1
+            return super().hold(*args, **kwargs)
 
-        def release(self):
-            self._locked = False
-
-        def locked(self) -> bool:
-            return self._locked
-
-    lock = CountingLock()
-    coord._control_arbiter = None
-    coord._control_lock = lock
+    lock = coord._control_arbiter = coord._control_lock = CountingArbiter()
     coord.is_on = False
     packets = []
 

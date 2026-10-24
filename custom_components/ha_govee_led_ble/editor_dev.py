@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import ipaddress
 import os
-import sys
 from collections.abc import Mapping
 from urllib.parse import SplitResult, urlsplit
 
@@ -55,20 +54,3 @@ def editor_dev_module_url(environ: Mapping[str, str] = os.environ) -> str | None
         return None
     validate_editor_dev_module_url(value)
     return value
-
-
-def _main() -> int:
-    if len(sys.argv) != 2:
-        print(f"usage: {sys.argv[0]} URL", file=sys.stderr)
-        return 2
-    try:
-        parsed = validate_editor_dev_module_url(sys.argv[1])
-    except ValueError as err:
-        print(err, file=sys.stderr)
-        return 1
-    print(f"{parsed.hostname}\t{parsed.port}\t{parsed.path}")
-    return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(_main())

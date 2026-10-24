@@ -492,7 +492,7 @@ async def test_name_based_apply_rejects_a_concurrently_changed_version() -> None
         )
 
 
-async def test_user_state_keeps_only_device_navigation_and_colours() -> None:
+async def test_user_state_keeps_only_device_navigation() -> None:
     application = await _application()
 
     updated = application.update_user_state(
@@ -500,11 +500,9 @@ async def test_user_state_keeps_only_device_navigation_and_colours() -> None:
         selected_config_entry_id="entry-a",
         navigation={"section": "scenes", "item_id": "effect-a"},
     )
-    coloured = application.record_user_colour("user-a", (1, 2, 3))
 
     assert updated.selected_config_entry_id == "entry-a"
     assert updated.navigation == {"section": "scenes", "item_id": "effect-a"}
-    assert coloured.recent_colours == ((1, 2, 3),)
 
 
 def _deployment(item: LibraryItem) -> DeploymentRecord:

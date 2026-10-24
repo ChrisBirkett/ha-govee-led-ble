@@ -130,19 +130,6 @@ class EffectUserStateRepository:
         self._data = candidate
         self._store.async_delay_save(lambda: copy.deepcopy(self._require_loaded()), delay=5)
 
-    def record_colour(self, owner_id: str, colour: RGB) -> EffectUserState:
-        _validate_rgb(colour)
-        current = self.get(owner_id)
-        recent = (colour, *(item for item in current.recent_colours if item != colour))
-        updated = EffectUserState(
-            owner_id,
-            recent[:MAX_RECENT_COLOURS],
-            current.selected_config_entry_id,
-            current.navigation,
-        )
-        self.set(updated)
-        return updated
-
     async def async_clear_config_entry(self, config_entry_id: str) -> None:
         current = self._require_loaded()
         candidate = copy.deepcopy(current)

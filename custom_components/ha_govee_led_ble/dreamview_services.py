@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Callable
 from functools import partial
 from typing import Any
@@ -13,6 +14,8 @@ from homeassistant.helpers import service
 from .const import DOMAIN
 from .dreamview import DreamviewMember, build_dreamview_command, build_dreamview_group, integer
 from .schema_compat import vol
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def _integer(maximum: int) -> Callable[[Any], int]:
@@ -108,8 +111,9 @@ async def _async_dreamview_service(entity: Any, call: ServiceCall, *, name: str)
         raise
     except TypeError, ValueError, vol.Invalid:
         raise ServiceValidationError(translation_domain=DOMAIN, translation_key="invalid_control_request") from None
-    except Exception:
-        raise HomeAssistantError(translation_domain=DOMAIN, translation_key="device_command_failed") from None
+    except Exception as err:
+        _LOGGER.exception("DreamView service call failed")
+        raise HomeAssistantError(translation_domain=DOMAIN, translation_key="device_command_failed") from err
     return None
 
 

@@ -128,9 +128,7 @@ from .effect_websocket_schema import (
     WS_TEMPLATE_DEFAULT_RESET,
     WS_TEMPLATE_DEFAULT_SET,
     WS_USER_STATE_GET,
-    WS_USER_STATE_RECORD_COLOUR,
     WS_USER_STATE_UPDATE,
-    strict_int,
 )
 from .music_commands import music_body_style
 from .music_protocol import music_code_for
@@ -1348,32 +1346,6 @@ def ws_user_state_update(
 
 @websocket_command(
     {
-        vol.Required("type"): WS_USER_STATE_RECORD_COLOUR,
-        vol.Required("colour"): [vol.All(strict_int, vol.Range(min=0, max=255))],
-    }
-)
-@callback
-def ws_user_state_record_colour(
-    hass: HomeAssistant,
-    connection: ActiveConnection,
-    msg: dict[str, Any],
-) -> None:
-    try:
-        updated = _backend(hass).application.record_user_colour(
-            connection.user.id,
-            msg["colour"],
-        )
-    except EffectLimitError as exc:
-        connection.send_error(msg["id"], "limit_reached", str(exc))
-        return
-    except EffectStorageError as exc:
-        connection.send_error(msg["id"], "invalid_format", str(exc))
-        return
-    connection.send_result(msg["id"], {"user_state": updated.to_dict()})
-
-
-@websocket_command(
-    {
         vol.Required("type"): WS_APPLY,
         vol.Required("config_entry_id"): IDENTIFIER,
         vol.Required("item_id"): UUID_TEXT,
@@ -1555,7 +1527,6 @@ def async_register_effect_websocket(
     websocket_api.async_register_command(hass, ws_deployment_subscribe)
     websocket_api.async_register_command(hass, ws_user_state_get)
     websocket_api.async_register_command(hass, ws_user_state_update)
-    websocket_api.async_register_command(hass, ws_user_state_record_colour)
     websocket_api.async_register_command(hass, ws_apply)
     websocket_api.async_register_command(hass, ws_apply_snapshot)
 
