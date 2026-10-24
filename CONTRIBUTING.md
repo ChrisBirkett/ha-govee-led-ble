@@ -104,7 +104,7 @@ Support status is declared in code, not inferred from GitHub activity or a devic
 1. Review owner-observed behaviour for the exact model and record the tested hardware, firmware and integration versions, restoration behaviour and remaining gaps in the confirmation thread.
    Existing issues, pull requests and maintainer-owned hardware count when they identify the exact SKU and observed working controls.  Link the original evidence, retain corrections and contrary results, and leave missing versions or untested features explicit rather than inferring them.
 2. Change that SKU's `ModelProfile.support_quality` to `SupportQuality.SUPPORTED` in `const.py`, including any separate revision profiles for the same SKU.  Do not change another model or a shared codec.
-3. Update the README support table and the supported/experimental model expectations in `tests/test_const.py`.  Regenerate fixtures with `uv run python -m tools.generate_frontend_contract_fixtures`, then run `make check`.
+3. Update the README support table and the supported/experimental model expectations in `tests/test_const.py`.  Then run `make check`.
 4. Ship the reviewed change in a release and update the confirmation thread's status summary with the release, original evidence links and confirmed revisions.
    Close the confirmed model's confirmation issue as completed; leave it unlocked for later revision reports and keep unresolved bug reports open.
 

@@ -31,7 +31,6 @@ FRONTEND_SOURCE := $(shell find frontend/src -type f -print | LC_ALL=C sort)
 FRONTEND_CONFIG := frontend/package.json frontend/package-lock.json frontend/tsconfig.json frontend/vite.config.ts frontend/vite.dev.config.ts frontend/vitest.config.ts
 FRONTEND_CONTRACTS := \
 	frontend/src/contracts.ts \
-	frontend/tests/fixtures/backend-contracts.json \
 	tools/generate_frontend_contract_fixtures.py \
 	$(INTEGRATION_DIR)/const.py \
 	$(INTEGRATION_DIR)/effect_catalogue.py \
@@ -51,7 +50,7 @@ FRONTEND_INPUTS := $(sort $(FRONTEND_SOURCE) $(FRONTEND_CONFIG) $(FRONTEND_CONTR
 
 PACKAGE_PATH := $(DIST_DIR)/ha_govee_led_ble.zip
 
-.PHONY: protocol frontend build check check-core check-code package clean verify-node verify-kaitai verify-protocol verify-frontend verify-generated
+.PHONY: fixtures protocol frontend build check check-core check-code package clean verify-node verify-kaitai verify-protocol verify-frontend verify-generated
 
 verify-node:
 	@expected="$$(cat .node-version)"; actual="$$($(NODE) --version)"; \
@@ -85,13 +84,15 @@ verify-protocol: protocol
 	LC_ALL=C diff --brief --recursive --no-dereference --exclude='__pycache__' $(BUILD_DIR)/verify-protocol/runtime $(PROTOCOL_DIR)
 
 verify-frontend: frontend
-	uv run --no-sync python -m tools.generate_frontend_contract_fixtures --check
 	rm -rf $(BUILD_DIR)/verify-frontend
 	mkdir -p $(BUILD_DIR)/verify-frontend
 	bash scripts/generate-frontend.sh $(BUILD_DIR)/verify-frontend/runtime >/dev/null
 	LC_ALL=C diff --brief --recursive --no-dereference --exclude='editor-loader.js' --exclude='editor.js' $(BUILD_DIR)/verify-frontend/runtime $(FRONTEND_OUTPUT_DIR)
 
 verify-generated: verify-protocol verify-frontend
+
+fixtures:
+	uv run --no-sync python -m tools.generate_frontend_contract_fixtures
 
 check: check-core
 	$(NPM) --prefix frontend run test:browser
@@ -105,6 +106,7 @@ check-core:
 
 check-code:
 	uv sync --locked
+	$(MAKE) --no-print-directory fixtures
 	$(NPM) --prefix frontend run typecheck
 	$(NPM) --prefix frontend run test:unit
 	uv run --no-sync ruff check .
