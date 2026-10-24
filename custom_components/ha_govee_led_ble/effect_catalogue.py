@@ -587,6 +587,36 @@ H66A0_DIY_FAMILIES: Final = tuple(
     )
 )
 
+# Android 7.6.01 h61d3/adjustNew/diy/H1A42DiyConfig, goods 400.
+H1A42_DIY_FAMILIES: Final = tuple(
+    DiyEffectFamily(
+        name,
+        label,
+        family,
+        tuple(
+            DiyEffectVariation(str(variant), f"Variation {index + 1}", variant)
+            for index, variant in enumerate(variants)
+        ),
+        family in (0, 1, 2, 3, 8, 9),
+        rate="sensitivity" if family == 4 else "speed",
+        rate_min=1,
+        rate_max=100,
+        multi_rate_min=0,
+        palette_max=3 if family == 10 else 8,
+        source_reference="Android 7.6.01 H1A42DiyConfig.getBasicEffectList/getMixEffectList",
+    )
+    for name, label, family, variants in (
+        ("fade", "Fade", 0, (0, 1, 2)),
+        ("jumping", "Jumping", 1, (0, 2)),
+        ("blinking", "Blinking", 2, (0, 1, 2)),
+        ("marquee", "Marquee", 3, (3, 4, 5)),
+        ("stream", "Stream", 8, (9, 10)),
+        ("flow", "Flow", 9, (9, 10)),
+        ("chase", "Chase", 10, (0,)),
+        ("music", "Music", 4, (8, 6, 7)),
+    )
+)
+
 H7020_DIY_FAMILIES: Final = (
     DiyEffectFamily(
         "fade",
@@ -1491,6 +1521,40 @@ MODEL_EFFECT_CATALOGUES: Final = {
             multi=studio_apply_capability_state("H66A0", CapabilityWorkflow.MULTI),
             palette_diy=studio_apply_capability_state("H66A0", CapabilityWorkflow.PALETTE_DIY),
             workshop=studio_apply_capability_state("H66A0", CapabilityWorkflow.WORKSHOP),
+        ),
+    ),
+    "H1A42": ModelEffectCatalogue(
+        sku="H1A42",
+        painted_addressing="physical_ic",
+        painted_effects=tuple(
+            {"id": name, "label": name.replace("_", " ").capitalize()}
+            for name in ("clockwise", "counter_clockwise", "cycle", "gradient", "twinkle", "breathe")
+        ),
+        effects=H1A42_DIY_FAMILIES,
+        music_modes=_native_music_modes("H1A42"),
+        video_modes=(),
+        templates=(
+            CatalogueTemplate(
+                "template:paint",
+                "Graffiti",
+                "single-layer",
+                PaintedEffect("clockwise", 50, 100, (None,), addressing="physical_ic"),
+            ),
+            *(_single_template("H1A42", family) for family in H1A42_DIY_FAMILIES),
+            *(_music_template("H1A42", mode) for mode in _native_music_modes("H1A42")),
+        ),
+        workshop_templates=(),
+        supports=CatalogueSupport(
+            multi=workflow_capability_state("H1A42", CapabilityWorkflow.MULTI),
+            advanced=workflow_capability_state("H1A42", CapabilityWorkflow.ADVANCED),
+            workshop=workflow_capability_state("H1A42", CapabilityWorkflow.WORKSHOP),
+        ),
+        apply=ApplySupport(
+            painted=studio_apply_capability_state("H1A42", CapabilityWorkflow.PAINTED),
+            single=studio_apply_capability_state("H1A42", CapabilityWorkflow.SINGLE),
+            multi=studio_apply_capability_state("H1A42", CapabilityWorkflow.MULTI),
+            palette_diy=studio_apply_capability_state("H1A42", CapabilityWorkflow.PALETTE_DIY),
+            workshop=studio_apply_capability_state("H1A42", CapabilityWorkflow.WORKSHOP),
         ),
     ),
     "H6125": ModelEffectCatalogue(

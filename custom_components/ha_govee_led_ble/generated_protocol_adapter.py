@@ -225,6 +225,12 @@ H7025MusicWrite = cast(
 H66a0MusicWrite = cast(
     Any, import_module("custom_components.ha_govee_led_ble.generated_protocol.h66a0_music_write").H66a0MusicWrite
 )
+H1a42MusicWrite = cast(
+    Any, import_module("custom_components.ha_govee_led_ble.generated_protocol.h1a42_music_write").H1a42MusicWrite
+)
+H1a42StatusReply = cast(
+    Any, import_module("custom_components.ha_govee_led_ble.generated_protocol.h1a42_status_reply").H1a42StatusReply
+)
 H7025StatusReply = cast(
     Any, import_module("custom_components.ha_govee_led_ble.generated_protocol.h7025_status_reply").H7025StatusReply
 )
@@ -389,6 +395,7 @@ _STATUS_ROOTS = {
     "H6125-intermediate": ("h6125_intermediate_status_reply", H6125IntermediateStatusReply),
     "H6099": ("h6099_status_reply", H6099StatusReply),
     "H66A0": ("h66a0_status_reply", H66a0StatusReply),
+    "H1A42": ("h1a42_status_reply", H1a42StatusReply),
     "H617A": ("status_reply", StatusReply),
     "H617C": ("h617c_status_reply", H617cStatusReply),
     "H7025": ("h7025_status_reply", H7025StatusReply),
@@ -416,6 +423,7 @@ _H6076_ACK_ROOTS = {"H6076": ("h6076_music_ack", H6076MusicAck)}
 _MUSIC_WRITE_ROOTS = {
     "H6076": ("h6076_music_write", H6076MusicWrite),
     "H66A0": ("h66a0_music_write", H66a0MusicWrite),
+    "H1A42": ("h1a42_music_write", H1a42MusicWrite),
     "H7025": ("h7025_music_write", H7025MusicWrite),
 }
 _COMMAND_ACK_ROOTS = {
@@ -955,10 +963,10 @@ def require_profile_packet(frame: bytes, profile: ModelProfile) -> None:
             if boolean_control_is_authorized(control, profile):
                 return
             raise ValueError(f"{profile.name} does not support boolean control {control}")
-        if domain == "physical_ic_count":
-            if profile.can_read(ReadDomain.PHYSICAL_IC_COUNT):
+        if domain in {"physical_ic_count", "subordinate_20", "subordinate_21"}:
+            if profile.can_read(ReadDomain(domain)):
                 return
-            raise ValueError(f"{profile.name} does not support physical IC count readback")
+            raise ValueError(f"{profile.name} does not support {domain} readback")
         if profile.command_operations is None or domain in profile.read_domains:
             return
     upload = _parse_xor_frame(frame, "A3", {"A3": ("command_write.upload_frame", CommandWrite.UploadFrame)}).parsed
@@ -1970,8 +1978,8 @@ def build_colour_temperature(
     *,
     profile: ModelProfile | None = None,
 ) -> bytes:
-    value = max(2000, min(9000, kelvin))
     profile = profile or get_profile(model)
+    value = max(profile.min_color_temp_kelvin, min(profile.max_color_temp_kelvin, kelvin))
     resolved = profile.command_grammar
     if resolved == "H601C":
         return _build_h601c_static_colour(mask, (255, 255, 255), kelvin, profile)
@@ -2502,20 +2510,22 @@ def build_music_mode(
         multi.sub_body = selector
         root.body = multi
         return _serialize_xor(root)
-    if resolved in {"H66A0", "H7025"}:
-        root_cls = H66a0MusicWrite if resolved == "H66A0" else H7025MusicWrite
+    if resolved in {"H1A42", "H66A0", "H7025"}:
+        root_cls = (
+            H1a42MusicWrite if resolved == "H1A42" else H66a0MusicWrite if resolved == "H66A0" else H7025MusicWrite
+        )
         root = root_cls()
         root.header, root.opcode, root.sub = b"\x33", b"\x05", b"\x13"
         selector = _child(root_cls.MusicSelector, root)
         selector.mode_id = root_cls.MusicMode(mode_id)
-        selector.sensitivity = max(0, min(100, sensitivity)) if resolved == "H66A0" else sensitivity
+        selector.sensitivity = max(0, min(100, sensitivity)) if resolved in {"H1A42", "H66A0"} else sensitivity
         if selector.is_legacy:
             selector.style = int(calm)
             selector.has_fixed_colour = int(colour is not None)
             if colour is not None:
                 selector.rgb = _rgb(selector, *colour)
-        elif resolved == "H66A0" and colour is not None:
-            raise ValueError("new H66A0 music selectors omit fixed colour")
+        elif resolved in {"H1A42", "H66A0"} and colour is not None:
+            raise ValueError(f"new {resolved} music selectors omit fixed colour")
         selector.unknown_tail = bytes(14 - (2 + (3 if colour is not None else 0) if selector.is_legacy else 0))
         root.selector = selector
         return _serialize_xor(root)
@@ -2767,9 +2777,13 @@ def parse_music_parameters(variant: MusicVariant, body: bytes) -> Any:
     """Validate a complete retained body with the selected KSY, independent of authoring bounds."""
     if not isinstance(body, bytes) or not body or len(body) > 255 * 17 - 3:
         raise ValueError("invalid music body length")
-    if variant.layout in {"h6099_music_parameters", "h66a0_music_parameters"}:
+    if variant.layout in {"h6099_music_parameters", "h66a0_music_parameters", "h1a42_music_parameters"}:
         root_type = (
             import_module(
+                "custom_components.ha_govee_led_ble.generated_protocol.h1a42_music_parameters"
+            ).H1a42MusicParameters
+            if variant.layout == "h1a42_music_parameters"
+            else import_module(
                 "custom_components.ha_govee_led_ble.generated_protocol.h66a0_music_parameters"
             ).H66a0MusicParameters
             if variant.layout == "h66a0_music_parameters"
@@ -2803,7 +2817,7 @@ def encode_music_parameters(
     preserve_companions: bool = False,
 ) -> bytes:
     """Edit named Kaitai fields; palette length never becomes an absolute tail offset."""
-    if variant.layout in {"h6099_music_parameters", "h66a0_music_parameters"}:
+    if variant.layout in {"h6099_music_parameters", "h66a0_music_parameters", "h1a42_music_parameters"}:
         return _encode_h6099_music_parameters(
             variant, parameters, palette, calm, physical_ic_count, preserve_companions
         )
@@ -2900,6 +2914,10 @@ def _encode_h6099_music_parameters(
 
     root_type = (
         import_module(
+            "custom_components.ha_govee_led_ble.generated_protocol.h1a42_music_parameters"
+        ).H1a42MusicParameters
+        if variant.layout == "h1a42_music_parameters"
+        else import_module(
             "custom_components.ha_govee_led_ble.generated_protocol.h66a0_music_parameters"
         ).H66a0MusicParameters
         if variant.layout == "h66a0_music_parameters"
@@ -2932,25 +2950,25 @@ def _encode_h6099_music_parameters(
             setattr(tail, spec.wire_field, int(value))
     if variant.requires_physical_ic_count and ic is None:
         raise ValueError("music parameters require known physical IC count")
-    mode_enum = root_type.MusicMode
-    if root.mode == mode_enum.bloom and calm is not None:
+    mode_name = getattr(root.mode, "name", None)
+    if mode_name == "bloom" and calm is not None:
         tail.no_rhythm_speed, tail.rhythm_speed = 10, 20 if calm else 80
-    elif getattr(mode_enum, "shiny", None) is not None and root.mode == mode_enum.shiny and calm is not None:
+    elif mode_name == "shiny" and calm is not None:
         tail.minimum_brightness, tail.maximum_brightness = (20, 70) if calm else (5, 100)
     elif ic is not None:
-        if root.mode == mode_enum.separation and (not preserve_companions or "gradient" in parameters):
+        if mode_name == "separation" and (not preserve_companions or "gradient" in parameters):
             tail.companion = (99, 98)[bool(tail.gradient)] if ic >= 30 else (97, 94)[bool(tail.gradient)]
-        elif root.mode == mode_enum.hopping and not preserve_companions:
+        elif mode_name == "hopping" and not preserve_companions:
             tail.piece_count_min = max(1, ceil(ic * 3 / 25))
             tail.piece_count_max = max(1, ceil(ic * 2 / 5))
-        elif root.mode == mode_enum.piano_keys and (not preserve_companions or "key_count" in parameters):
+        elif mode_name == "piano_keys" and (not preserve_companions or "key_count" in parameters):
             if not preserve_companions:
                 tail.speed = (
                     (10 if ic <= 30 else 35) if variant.physical_defaults == "rgbic" else (10 if ic < 30 else 35)
                 )
                 tail.off_minimum = ceil(ic / 4) if ic < 30 else 1
             tail.off_maximum = max(tail.off_minimum, tail.key_count // 2)
-        elif root.mode == mode_enum.fountain and (not preserve_companions or "direction" in parameters):
+        elif mode_name == "fountain" and (not preserve_companions or "direction" in parameters):
             tail.start_point = {"clockwise": 0, "counterclockwise": 2, "two_way": 1}[str(parameters["direction"])]
             two_way = tail.start_point == 1
             tail.piece_length = 1 if ic < 30 else 2 if two_way else 3
@@ -2959,7 +2977,7 @@ def _encode_h6099_music_parameters(
             )
             if not preserve_companions:
                 tail.speed = 80 if ic < 30 else 85
-        elif root.mode == mode_enum.day_and_night and not preserve_companions:
+        elif mode_name == "day_and_night" and not preserve_companions:
             if not variant.parameters:
                 tail.piece_count = max(1, ic // 2) if ic < 30 else ceil(ic * 7 / 50)
                 # MusicMode.d uses default subEffect[0] (piece) as speed and [1] (10/20) as fade.

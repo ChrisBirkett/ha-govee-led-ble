@@ -306,7 +306,7 @@ async def test_declared_read_only_segments_are_disabled_by_write_capability(hass
     assert coordinator._field_revisions == {}
 
 
-def test_profile_kelvin_range_is_overridden_by_adapter_constant(monkeypatch):
+def test_profile_kelvin_range_follows_declared_target(monkeypatch):
     monkeypatch.setitem(
         MODEL_PROFILES,
         "H9904",
@@ -320,8 +320,9 @@ def test_profile_kelvin_range_is_overridden_by_adapter_constant(monkeypatch):
         ),
     )
     parsed = parse_static_write(build_color_temp(1500, "H9904"), "H9904")
-    assert parsed.kelvin == 2000
+    assert parsed.kelvin == 1500
     assert parsed.kelvin_companion_rgb == kelvin_to_rgb(1500)
+    assert parse_static_write(build_color_temp(1500, "H617A"), "H617A").kelvin == 2000
 
 
 def test_selectable_segment_limit_follows_declared_target(monkeypatch):

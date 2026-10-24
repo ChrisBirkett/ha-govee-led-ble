@@ -48,7 +48,14 @@ class MusicVariant:
 
 # Layouts whose A3 companion carries the effect's parameters; their selectors omit style and fixed colour.
 COMPANION_MUSIC_LAYOUTS = frozenset(
-    {"music_body", "h6076_music_body", "h6099_music_parameters", "h66a0_music_parameters", "h7025_music_body"}
+    {
+        "music_body",
+        "h6076_music_body",
+        "h6099_music_parameters",
+        "h66a0_music_parameters",
+        "h1a42_music_parameters",
+        "h7025_music_body",
+    }
 )
 
 # Captured values, not values calculated from logical colour zones or guessed IC counts.
@@ -420,6 +427,50 @@ H66A0_MUSIC_VARIANTS = (
         "H66A0 MusicModeH66A0.d / SubMusicModeConfig.makeFlowingLight",
         "h66a0_music_parameters",
         bytes.fromhex("53" + _H6099_PALETTE + "01"),
+        palette_bounds=(1, 8),
+        supports_fixed_colour=False,
+    ),
+)
+
+# Android 7.6.01 h61d3/adjustNew/music/MusicModeNewH1A43, goods 400 + issue #391 hardware sweep.
+H1A42_MUSIC_VARIANTS = (
+    *(
+        replace(
+            variant,
+            evidence=variant.evidence.replace("H6099 MusicMode", "H1A42 MusicModeNewH1A43"),
+        )
+        for variant in H6099_MUSIC_VARIANTS
+        if variant.mode_code in (3, 4, 5, 6)
+    ),
+    MusicVariant(
+        0x84,
+        "H1A42 MusicModeNewH1A43.d / SubMusicModeConfig.makeShuiHua",
+        "h1a42_music_parameters",
+        bytes.fromhex("84" + _H6099_PALETTE),
+        palette_bounds=(1, 8),
+        supports_fixed_colour=False,
+    ),
+    MusicVariant(
+        0x85,
+        "H1A42 MusicModeNewH1A43.d / SubMusicModeConfig.makeTanHuang",
+        "h1a42_music_parameters",
+        bytes.fromhex("85" + _H6099_PALETTE),
+        palette_bounds=(2, 8),
+        supports_fixed_colour=False,
+    ),
+    MusicVariant(
+        0x92,
+        "H1A42 MusicModeNewH1A43.d / SubMusicModeConfig.makeFeiDieUFO",
+        "h1a42_music_parameters",
+        bytes.fromhex("92" + _H6099_PALETTE),
+        palette_bounds=(1, 8),
+        supports_fixed_colour=False,
+    ),
+    MusicVariant(
+        0xA3,
+        "H1A42 MusicModeNewH1A43.d / SubMusicModeConfig.makeYouDong",
+        "h1a42_music_parameters",
+        bytes.fromhex("a3" + _H6099_PALETTE),
         palette_bounds=(1, 8),
         supports_fixed_colour=False,
     ),

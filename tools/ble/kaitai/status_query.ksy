@@ -28,6 +28,8 @@ seq:
         'query_domain::colour_mode': colour_mode_query_body
         'query_domain::firmware': zero_body
         'query_domain::hardware': hardware_query_body
+        'query_domain::subordinate_20': zero_body
+        'query_domain::subordinate_21': zero_body
         'query_domain::light_count': zero_body
         'query_domain::physical_ic_count': zero_body
         'query_domain::limit': zero_body
@@ -45,6 +47,8 @@ enums:
     0x07: hardware
     0x0e: limit
     0x0f: light_count
+    0x20: subordinate_20
+    0x21: subordinate_21
     0x40: physical_ic_count
     0xa3: multi_effect
     0xa5: segments

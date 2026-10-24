@@ -94,6 +94,37 @@ def test_h66a0_exact_status_root_covers_declared_reads_with_captured_pages():
     assert sum(len(page.segments) for page in pages) == MODEL_PROFILES["H66A0"].segment_count
 
 
+def test_h1a42_exact_status_root_covers_declared_reads_and_wide_kelvin():
+    from custom_components.ha_govee_led_ble.light_commands import build_color_temp
+
+    frames = (
+        _h6179_status(1, b"\x01"),
+        _h6179_status(4, b"\x64"),
+        _h6179_status(5, H("1392")),
+        _h6179_status(6, b"1.01.07\0"),
+        _h6179_status(7, b"\x033.08.01\0"),
+        _h6179_status(0x20, b"1.07.00\0"),
+        _h6179_status(0x21, b"1.02.04\0"),
+        _h6179_status(0x40, b"\x00\x0b"),
+        _h6179_status(0xA5, H("0164ff00006400ff00640000ff64ffffff")),
+        _h6179_status(0xA5, H("0264808080000000000000000000000000")),
+    )
+    decoded = [decode_status_frame_result(frame, "H1A42") for frame in frames]
+    assert all(result.parser == "h1a42_status_reply" and result.rejection is None for result in decoded)
+    assert {result.parsed.domain for result in decoded} == MODEL_PROFILES["H1A42"].read_domains
+    assert decoded[3].parsed.generated.body.text == "1.01.07"
+    assert decoded[4].parsed.generated.body.text == "3.08.01"
+    assert decoded[5].parsed.generated.body.text == "1.07.00"
+    assert decoded[6].parsed.generated.body.text == "1.02.04"
+    assert decoded[7].parsed.generated.body.count == 11
+    music = parse_color_mode(decoded[2].parsed.generated, "H1A42")
+    assert music.mode is ParsedMode.MUSIC and music.music_mode == "ripple"
+    pages = [result.parsed.generated.body for result in decoded[8:]]
+    assert [len(page.segments) for page in pages] == [4, 1]
+    assert build_color_temp(1000, "H1A42")[7:9] == (1000).to_bytes(2, "big")
+    assert build_color_temp(10000, "H1A42")[7:9] == (10000).to_bytes(2, "big")
+
+
 def test_status_envelope_rejects_invalid_frames() -> None:
     assert decode_status_frame(b"") is None
     assert decode_status_frame(H("3301010000000000000000000000000000000033")) is None
