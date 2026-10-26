@@ -2,7 +2,6 @@ import { expect, test } from "vitest";
 
 import {
   editorActionDescriptors,
-  editorActionOrder,
   editorOwnerMatches,
   newEditorSourceSelected,
   reactiveEffectSelectorVisible,
@@ -39,22 +38,20 @@ function context(
 
 test("editor action descriptors follow source, state, and exact order", () => {
   expect(
-    editorActionOrder(
-      editorActionDescriptors(catalogue, context()),
-    ),
+    editorActionDescriptors(catalogue, context())
+      .filter(({ visible }) => visible)
+      .map(({ id }) => id),
   ).toEqual(["saveAs"]);
   expect(
-    editorActionOrder(
-      editorActionDescriptors(
-        catalogue,
-        context({
-          resetDirty: true,
-          defaultDirty: true,
-          liveApplyEnabled: false,
-          canApply: true,
-        }),
-      ),
-    ),
+    editorActionDescriptors(
+      catalogue,
+      context({
+        resetDirty: true,
+        defaultDirty: true,
+        liveApplyEnabled: false,
+        canApply: true,
+      }),
+    ).filter(({ visible }) => visible).map(({ id }) => id),
   ).toEqual(["apply", "saveAs", "reset", "save"]);
 
   const newActions = editorActionDescriptors(
@@ -64,7 +61,7 @@ test("editor action descriptors follow source, state, and exact order", () => {
     },
     context(),
   );
-  expect(editorActionOrder(newActions)).toEqual(["reset", "save"]);
+  expect(newActions.filter(({ visible }) => visible).map(({ id }) => id)).toEqual(["reset", "save"]);
   expect(newActions.find(({ id }) => id === "reset")).toMatchObject({
     style: "secondary",
     visible: true,
@@ -72,12 +69,10 @@ test("editor action descriptors follow source, state, and exact order", () => {
   });
 
   expect(
-    editorActionOrder(
-      editorActionDescriptors(
-        saved,
-        context({ resetDirty: true, autoSaveEnabled: true }),
-      ),
-    ),
+    editorActionDescriptors(
+      saved,
+      context({ resetDirty: true, autoSaveEnabled: true }),
+    ).filter(({ visible }) => visible).map(({ id }) => id),
   ).toEqual(["saveAs", "reset", "delete"]);
   expect(
     editorActionDescriptors(
@@ -94,7 +89,7 @@ test("editor action descriptors follow source, state, and exact order", () => {
     },
     context({ resetDirty: true }),
   );
-  expect(editorActionOrder(sceneActions)).toEqual([
+  expect(sceneActions.filter(({ visible }) => visible).map(({ id }) => id)).toEqual([
     "saveAs",
     "reset",
     "cancel",

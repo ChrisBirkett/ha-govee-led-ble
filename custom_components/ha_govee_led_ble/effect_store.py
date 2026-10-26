@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
+import asyncio
+import copy
 from collections.abc import Awaitable, Callable
 from typing import Any, Protocol
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
+
+from .effect_persistence_validation import EffectStorageError
 
 type EffectDocument = dict[str, Any]
 type EffectDocumentFactory = Callable[[], EffectDocument]
@@ -21,6 +25,43 @@ class VersionedDocumentStore(Protocol):
     async def async_save(self, data: EffectDocument) -> None: ...
 
     def async_delay_save(self, data_func: EffectDocumentFactory, delay: float) -> None: ...
+
+
+class DeviceDefaultsRepository[T]:
+    """Shared lifecycle for validated, immediately persisted per-device defaults."""
+
+    def __init__(
+        self,
+        store: VersionedDocumentStore,
+        validate: Callable[[object], tuple[T, ...]],
+        name: str,
+    ) -> None:
+        self._store = store
+        self._validate = validate
+        self._name = name
+        self._data: EffectDocument | None = None
+        self._lock = asyncio.Lock()
+
+    async def async_load(self) -> tuple[T, ...]:
+        async with self._lock:
+            stored = await self._store.async_load()
+            data = {"devices": {}} if stored is None else stored
+            values = self._validate(data)
+            self._data = copy.deepcopy(data)
+            return values
+
+    async def async_delete_device(self, config_entry_id: str) -> None:
+        async with self._lock:
+            candidate = copy.deepcopy(self._require_loaded())
+            if candidate["devices"].pop(config_entry_id, None) is None:
+                return
+            await self._store.async_save(candidate)
+            self._data = candidate
+
+    def _require_loaded(self) -> EffectDocument:
+        if self._data is None:
+            raise EffectStorageError(f"{self._name} store has not been loaded")
+        return self._data
 
 
 class _MigratingStore(Store[EffectDocument]):

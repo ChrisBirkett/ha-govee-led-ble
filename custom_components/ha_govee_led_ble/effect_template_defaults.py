@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 import copy
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -34,7 +33,7 @@ from .effect_persistence_validation import (
     as_persisted_mapping,
     required_persisted_string,
 )
-from .effect_store import HomeAssistantVersionedDocumentStore, VersionedDocumentStore
+from .effect_store import DeviceDefaultsRepository, HomeAssistantVersionedDocumentStore, VersionedDocumentStore
 
 TEMPLATE_DEFAULT_STORE_VERSION: Final = 1
 TEMPLATE_DEFAULT_STORE_MINOR_VERSION: Final = 0
@@ -102,19 +101,13 @@ class CatalogueTemplateDefault:
         )
 
 
-class CatalogueTemplateDefaultRepository:
+class CatalogueTemplateDefaultRepository(DeviceDefaultsRepository[CatalogueTemplateDefault]):
     def __init__(self, hass: HomeAssistant | VersionedDocumentStore) -> None:
-        self._store = _template_default_store(hass) if isinstance(hass, HomeAssistant) else hass
-        self._data: dict[str, Any] | None = None
-        self._lock = asyncio.Lock()
-
-    async def async_load(self) -> tuple[CatalogueTemplateDefault, ...]:
-        async with self._lock:
-            stored = await self._store.async_load()
-            data = {"devices": {}} if stored is None else stored
-            values = _validate_store(data)
-            self._data = copy.deepcopy(data)
-            return values
+        super().__init__(
+            _template_default_store(hass) if isinstance(hass, HomeAssistant) else hass,
+            _validate_store,
+            "template-default",
+        )
 
     def get(self, config_entry_id: str, template_id: str) -> CatalogueTemplateDefault | None:
         records = cast(dict[str, Any], self._require_loaded()["devices"].get(config_entry_id, {}))
@@ -147,19 +140,6 @@ class CatalogueTemplateDefaultRepository:
                 candidate["devices"].pop(config_entry_id)
             await self._store.async_save(candidate)
             self._data = candidate
-
-    async def async_delete_device(self, config_entry_id: str) -> None:
-        async with self._lock:
-            candidate = copy.deepcopy(self._require_loaded())
-            if candidate["devices"].pop(config_entry_id, None) is None:
-                return
-            await self._store.async_save(candidate)
-            self._data = candidate
-
-    def _require_loaded(self) -> dict[str, Any]:
-        if self._data is None:
-            raise EffectStorageError("template-default store has not been loaded")
-        return self._data
 
 
 def _template_default_store(hass: HomeAssistant) -> VersionedDocumentStore:

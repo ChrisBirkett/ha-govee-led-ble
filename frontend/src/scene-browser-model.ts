@@ -8,7 +8,6 @@ import type {
   LibraryItem,
   LibrarySummary,
   PaletteSceneContent,
-  PreviewStatus,
   SceneCatalogue,
   SceneSummary,
 } from "./types";
@@ -193,17 +192,6 @@ export function isSceneContent(content: LibraryItem["content"]): content is Scen
 
 function isSceneKind(kind: string): boolean {
   return kind === "scene_builtin" || kind === "scene_palette" || kind === "scene_layered" || kind === "native_effect";
-}
-
-export function previewMayChangeSceneDefault(status: PreviewStatus | undefined, configEntryId: string | undefined): boolean {
-  return Boolean(
-    status &&
-      configEntryId &&
-      status.config_entry_id === configEntryId &&
-      ["scene_builtin", "scene_palette", "scene_layered", "native_effect"].includes(status.content_kind) &&
-        ["confirmed", "unconfirmed", "failed", "cancelled"].includes(status.phase) &&
-        ["may_have_started", "completed", "unknown"].includes(status.write_disposition),
-  );
 }
 
 export function sceneSpeedOptions(optionCount: number, defaultIndex: number): SegmentedControlOption<number>[] {

@@ -71,12 +71,6 @@ export function reactiveEffectSelectorVisible(source: EditorSource): boolean {
   );
 }
 
-export function editorActionOrder(
-  actions: readonly EditorActionDescriptor[],
-): EditorAction[] {
-  return actions.filter((action) => action.visible).map((action) => action.id);
-}
-
 export function editorOwnerMatches(
   source: EditorSource,
   section: "custom" | "video" | "scenes",
