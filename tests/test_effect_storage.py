@@ -139,6 +139,53 @@ async def test_template_defaults_round_trip_and_delete_by_device() -> None:
     assert store.data == {"devices": {}}
 
 
+@pytest.mark.parametrize(
+    ("repository_type", "value", "identity"),
+    [
+        (
+            NativeSceneDefaultRepository,
+            NativeSceneDefault("entry-a", 1, 2, TIMESTAMP, b"\x01\x02"),
+            ("entry-a", 1, 2),
+        ),
+        (
+            CatalogueTemplateDefaultRepository,
+            CatalogueTemplateDefault(
+                "entry-a",
+                "H617A",
+                "template:single:0:0",
+                TIMESTAMP,
+                resolve_catalogue_template("H617A", "template:single:0:0").content,
+            ),
+            ("entry-a", "template:single:0:0"),
+        ),
+    ],
+    ids=["scene", "template"],
+)
+async def test_device_default_deletion_preserves_state_on_failed_save(
+    repository_type, value, identity, monkeypatch
+) -> None:
+    store = InMemoryVersionedDocumentStore()
+    repository = repository_type(store)
+    with pytest.raises(EffectStorageError, match="has not been loaded"):
+        await repository.async_delete_device("entry-a")
+    assert await repository.async_load() == ()
+    await repository.async_set(value)
+
+    await repository.async_delete_device("missing")
+    assert store.save_count == 1
+    with monkeypatch.context() as patch:
+        patch.setattr(store, "async_save", AsyncMock(side_effect=OSError("disk full")))
+        with pytest.raises(OSError, match="disk full"):
+            await repository.async_delete_device("entry-a")
+    assert repository.get(*identity) == value
+    assert await repository_type(store).async_load() == (value,)
+
+    await repository.async_delete_device("entry-a")
+    assert repository.get(*identity) is None
+    assert await repository_type(store).async_load() == ()
+    assert store.save_count == 2
+
+
 async def test_template_defaults_reject_mismatched_structural_identity() -> None:
     with pytest.raises(EffectStorageError, match="structural identity"):
         CatalogueTemplateDefault(
